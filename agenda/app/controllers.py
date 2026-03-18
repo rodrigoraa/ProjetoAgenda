@@ -23,7 +23,7 @@ def login():
     if request.method == "POST":
         professor = Professor.query.filter_by(nome=request.form.get("nome")).first()
         if professor and professor.verificar_senha(request.form.get("senha")):
-            login_user(professor)
+            login_user(professor, remember=True)
             return redirect(url_for("main.index"))
         flash("Erro no login. Verifique as suas credenciais.")
     return render_template("login.html")
