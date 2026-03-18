@@ -10,9 +10,9 @@ with app.app_context():
     print("✅ Tabelas recriadas com sucesso!")
 
     # 2. Cria o admin se ele não existir
-    if not Professor.query.filter_by(nome="admin").first():
+    if not Professor.query.filter_by(nome="Geone dos Santos Bernardo").first():
         novo_admin = Professor(
-            nome="admin", senha=generate_password_hash("admin123"), is_admin=True
+            nome="admin", senha=generate_password_hash("fera@123"), is_admin=True
         )
         db.session.add(novo_admin)
         db.session.commit()
