@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Portal do Professor - EduReserva</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg-body: #f1f5f9;
+        --sidebar-bg: #0f172a;
+        --sidebar-hover: #1e293b;
+        --accent: #3b82f6;
+      }
+      body {
+        background-color: var(--bg-body);
+        font-family: "Inter", sans-serif;
+        color: #334155;
+      }
+
+      /* Sidebar Esquerda */
+      #sidebar {
+        width: 280px;
+        background: var(--sidebar-bg);
+        color: #f8fafc;
+        min-height: 100vh;
+        z-index: 10;
+      }
+      .nav-link {
+        color: #94a3b8;
+        border-radius: 10px;
+        margin-bottom: 5px;
+        padding: 12px 15px;
+        transition: all 0.2s;
+      }
+      .nav-link:hover,
+      .nav-link.active {
+        background: var(--sidebar-hover);
+        color: #fff;
+      }
+      .nav-link.active {
+        border-left: 4px solid var(--accent);
+      }
+
+      /* Área Central */
+      #main-content {
+        flex: 1;
+        padding: 30px;
+        overflow-y: auto;
+        height: 100vh;
+      }
+      #calendar-container {
+        background: white;
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Agenda Direita */
+      #agenda-lateral {
+        width: 360px;
+        background: white;
+        border-left: 1px solid #e2e8f0;
+        padding: 25px;
+        overflow-y: auto;
+        height: 100vh;
+        box-shadow: -4px 0 15px rgba(0, 0, 0, 0.02);
+      }
+      .horario-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 15px;
+        background: white;
+        transition: all 0.2s ease;
+      }
+      .horario-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+      }
+      .horario-card.ocupado {
+        border-left: 4px solid #ef4444;
+        background: #fef2f2;
+        border-color: #fca5a5;
+      }
+      .horario-card.livre {
+        border-left: 4px solid #10b981;
+      }
+
+      /* Modais (Desfoque no fundo) */
+      .modal-backdrop {
+        backdrop-filter: blur(4px);
+        background-color: rgba(15, 23, 42, 0.6);
+      }
+      .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+
+      /* =========================================
+         CUSTOMIZAÇÃO PREMIUM DO FULLCALENDAR
+         ========================================= */
+
+      /* Fonte geral e remoção de bordas pesadas */
+      .fc {
+        font-family: "Inter", sans-serif;
+      }
+
+      .fc-theme-standard .fc-scrollgrid {
+        border: none !important;
+      }
+
+      .fc-theme-standard td,
+      .fc-theme-standard th {
+        border-color: #e2e8f0 !important;
+      }
+
+      /* Cabeçalho dos dias da semana (Dom, Seg, Ter...) */
+      .fc-col-header-cell {
+        background-color: #f8fafc;
+        padding: 15px 0 !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        border-top: none !important;
+        border-left: none !important;
+        border-right: none !important;
+      }
+
+      .fc-col-header-cell-cushion {
+        color: #64748b;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        text-decoration: none !important;
+      }
+
+      /* Células dos dias (Os quadradinhos) */
+      .fc-daygrid-day-frame {
+        padding: 8px !important;
+        min-height: 100px !important;
+      }
+
+      .fc-daygrid-day-number {
+        color: #334155;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none !important;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+        margin: 5px;
+      }
+
+      /* Efeito ao passar o mouse no dia */
+      .fc-daygrid-day:hover {
+        background-color: #f8fafc;
+        cursor: pointer;
+      }
+      .fc-daygrid-day:hover .fc-daygrid-day-number {
+        background-color: var(--sidebar-bg); /* Fica escuro ao passar o mouse */
+        color: white;
+      }
+
+      /* Destaque para o dia de HOJE */
+      .fc-day-today {
+        background-color: #eff6ff !important; /* Fundo azul bem clarinho */
+      }
+      .fc-day-today .fc-daygrid-day-number {
+        background-color: var(--accent); /* Bolinha azul chamativa */
+        color: white;
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+      }
+
+      /* Título e Barra Superior do Calendário */
+      .fc-toolbar-title {
+        font-weight: 800 !important;
+        font-size: 1.5rem !important;
+        color: #0f172a;
+        text-transform: capitalize;
+      }
+
+      /* Botões do Calendário (Hoje, <, >) */
+      .fc-button-primary {
+        background-color: white !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #475569 !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        text-transform: capitalize !important;
+        padding: 8px 16px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.2s !important;
+      }
+
+      .fc-button-primary:hover {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+      }
+
+      .fc-button-primary:not(:disabled):active,
+      .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: var(--sidebar-bg) !important;
+        border-color: var(--sidebar-bg) !important;
+        color: white !important;
+      }
+      /* Destaca o dia clicado */
+      .fc-day-ritmo-click {
+        background-color: rgba(59, 130, 246, 0.1) !important;
+        border: 2px solid var(--accent) !important;
+      }
+
+      /* Estiliza os eventos (bolinhas de ocupação) */
+      .fc-event {
+        border: none !important;
+        background-color: var(--accent) !important;
+        border-radius: 4px !important;
+        font-size: 0.75rem !important;
+        padding: 1px 4px !important;
+      }
+      /* Estilo para o Toast de Notificação */
+      .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+      }
+
+      .custom-toast {
+        background: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-left: 5px solid var(--accent);
+        transform: translateX(120%);
+        transition: transform 0.3s ease-in-out;
+      }
+
+      .custom-toast.show {
+        transform: translateX(0);
+      }
+      .custom-toast.success {
+        border-left-color: #10b981;
+      }
+      .custom-toast.error {
+        border-left-color: #ef4444;
+      }
+
+      /* Destaque para o dia selecionado no calendário */
+      .fc-day-selected {
+        background-color: rgba(59, 130, 246, 0.1) !important;
+        border: 2px solid var(--accent) !important;
+      }
+      /* Mantém o calendário limpo */
+      .fc-daygrid-event-harness {
+        margin-top: 1px !important;
+      }
+
+      .fc-event {
+        font-size: 0.7rem !important;
+        padding: 2px 4px !important;
+        border-radius: 4px !important;
+        border: none !important;
+        text-align: center;
+      }
+
+      /* Esconde o excesso se houver muitos eventos (o "more" link) */
+      .fc-daygrid-more-link {
+        font-size: 0.7rem;
+        font-weight: bold;
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body class="d-flex">
+    <aside id="sidebar" class="p-4 d-flex flex-column">
+      <div class="d-flex align-items-center mb-5 mt-2">
+        <div
+          class="bg-primary text-white rounded p-2 me-3 d-flex align-items-center justify-content-center"
+          style="width: 40px; height: 40px"
+        >
+          <i class="bi bi-calendar2-range fs-5"></i>
+        </div>
+        <h4 class="mb-0 fw-bold">EduReserva</h4>
+      </div>
+
+      <div class="mb-4">
+        <p
+          class="text-uppercase small fw-bold text-secondary mb-1"
+          style="letter-spacing: 1px"
+        >
+          Olá, Professor(a)
+        </p>
+        <h6 class="text-white fs-5">{{ nome }}</h6>
+      </div>
+
+      <p
+        class="text-uppercase small fw-bold text-secondary mt-3 mb-2 px-3"
+        style="letter-spacing: 1px"
+      >
+        Salas / Laboratórios
+      </p>
+      <ul class="nav flex-column mb-auto">
+        {% for r in recursos %}
+        <li class="nav-item">
+          <a
+            class="nav-link recurso-link fw-medium"
+            data-id="{{ r.id }}"
+            onclick="selecionarRecurso({{ r.id }}, '{{ r.nome }}')"
+          >
+            <i class="bi bi-hdd-network me-2"></i>{{ r.nome }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="mt-auto pt-4 border-top border-secondary">
+        <a
+          href="{{ url_for('main.logout') }}"
+          class="btn btn-danger w-100 rounded-3 py-2 fw-medium"
+        >
+          <i class="bi bi-box-arrow-left me-2"></i>Sair da Conta
+        </a>
+      </div>
+    </aside>
+
+    <main id="main-content">
+      <div class="mb-4">
+        <h2 class="fw-bold text-dark" id="titulo-recurso">
+          Selecione um recurso
+        </h2>
+        <p class="text-muted">
+          Escolha um laboratório ou sala no menu lateral para visualizar o
+          calendário.
+        </p>
+      </div>
+      <div id="calendar-container">
+        <div id="calendar"></div>
+      </div>
+      <div class="card mt-4 shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="fw-bold text-dark mb-0">
+            <i class="bi bi-calendar-check text-primary me-2"></i>
+            Ocupação Geral da Escola
+          </h5>
+          <p class="text-muted small mb-0" id="resumo-data-texto">
+            Selecione uma data para ver todos os agendamentos.
+          </p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div id="lista-agendamentos-geral" class="row g-3">
+            <div class="text-center text-muted py-5">
+              <i class="bi bi-info-circle me-1"></i> Clique em um dia no
+              calendário.
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside id="agenda-lateral">
+      <div class="mb-4 pb-3 border-bottom">
+        <h5 class="fw-bold mb-1 text-dark" id="data-selecionada-titulo">
+          Agenda do Dia
+        </h5>
+        <p class="text-muted small mb-0" id="data-selecionada-sub">
+          Selecione um dia no calendário
+        </p>
+      </div>
+
+      <div id="lista-horarios">
+        <div class="text-center text-muted mt-5 pt-5">
+          <i class="bi bi-calendar2-x fs-1 d-block mb-3 text-light"></i>
+          <p>Nenhum dia selecionado.</p>
+        </div>
+      </div>
+    </aside>
+
+    <div class="modal fade" id="modalReserva" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-0 pb-0 pt-4 px-4">
+            <h5 class="modal-title fw-bold fs-4 text-dark">
+              Confirmar Reserva
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body p-4">
+            <p class="text-muted mb-4">
+              Escolha a turma que utilizará o recurso neste horário.
+            </p>
+            <input type="hidden" id="reserva-horario-id" />
+            <input type="hidden" id="reserva-data" />
+
+            <label class="fw-bold small mb-2 text-dark"
+              >Turma Responsável</label
+            >
+            <select
+              id="reserva-turma"
+              class="form-select form-select-lg rounded-3 fs-6"
+            >
+              <option value="" disabled selected>Selecione a turma...</option>
+              {% for t in turmas %}
+              <option value="{{ t.id }}" data-turno="{{ t.turno }}">
+                {{ t.nome }} ({{ t.turno }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="modal-footer border-0 pb-4 px-4">
+            <button
+              type="button"
+              class="btn btn-light fw-bold rounded-3 px-4"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary fw-bold rounded-3 px-4"
+              onclick="confirmarReserva()"
+            >
+              Confirmar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let salaIdAtiva = null;
+      let dataAtiva = null;
+      let calendar;
+
+      // --- FUNÇÃO PARA NOTIFICAÇÕES PROFISSIONAIS (TOAST) ---
+      function showToast(mensagem, tipo = "success") {
+        let container = document.getElementById("toast-container");
+        if (!container) {
+          container = document.createElement("div");
+          container.id = "toast-container";
+          container.className = "toast-container";
+          document.body.appendChild(container);
+        }
+
+        const toast = document.createElement("div");
+        toast.className = `custom-toast ${tipo}`;
+        const icon =
+          tipo === "success"
+            ? "bi-check-circle-fill text-success"
+            : "bi-exclamation-triangle-fill text-danger";
+
+        toast.innerHTML = `<i class="bi ${icon}"></i> <span>${mensagem}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => toast.classList.add("show"), 100);
+        setTimeout(() => {
+          toast.classList.remove("show");
+          setTimeout(() => toast.remove(), 300);
+        }, 3500);
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        var calendarEl = document.getElementById("calendar");
+        calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: "dayGridMonth",
+          locale: "pt",
+          headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "",
+          },
+          buttonText: { today: "Hoje" },
+          height: "auto",
+          dayMaxEvents: 2,
+          // CARREGA AS BOLINHAS DE OCUPAÇÃO AUTOMATICAMENTE
+          events: "/api/eventos",
+          dateClick: function (info) {
+            // Destaque visual do dia selecionado
+            document
+              .querySelectorAll(".fc-day")
+              .forEach((el) => el.classList.remove("fc-day-ritmo-click"));
+            info.dayEl.classList.add("fc-day-ritmo-click");
+
+            dataAtiva = info.dateStr;
+            carregarResumoDoDia(dataAtiva);
+
+            if (salaIdAtiva) {
+              atualizarAgendaLateral(dataAtiva);
+            } else {
+              console.log("Nenhuma sala selecionada.");
+            }
+          },
+        });
+        calendar.render();
+      });
+
+      function selecionarRecurso(id, nome) {
+        salaIdAtiva = id;
+        document.getElementById("titulo-recurso").innerText = nome;
+        document
+          .querySelectorAll(".recurso-link")
+          .forEach((link) => link.classList.remove("active"));
+
+        // Uso seguro do event
+        if (window.event) window.event.currentTarget.classList.add("active");
+
+        if (dataAtiva) {
+          atualizarAgendaLateral(dataAtiva);
+        }
+      }
+
+      function atualizarAgendaLateral(data) {
+        const dataFormatada = new Date(data + "T00:00:00").toLocaleDateString(
+          "pt-PT",
+          { weekday: "long", day: "numeric", month: "long" },
+        );
+        document.getElementById("data-selecionada-titulo").innerHTML =
+          dataFormatada;
+        document.getElementById("data-selecionada-sub").innerText =
+          "Gestão de horários para este dia";
+
+        const conteiner = document.getElementById("lista-horarios");
+        conteiner.innerHTML =
+          '<div class="text-center mt-5 spinner-border text-primary"></div>';
+
+        fetch(`/api/horarios/${salaIdAtiva}/${data}`)
+          .then((res) => res.json())
+          .then((horarios) => {
+            conteiner.innerHTML = "";
+            if (horarios.length === 0) {
+              conteiner.innerHTML =
+                '<div class="text-center text-muted mt-5">Sem horários para este dia.</div>';
+              return;
+            }
+
+            horarios.forEach((h) => {
+              const div = document.createElement("div");
+              const statusClass = h.ocupado_por ? "ocupado" : "livre";
+              let statusBadge = h.ocupado_por
+                ? '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-3 py-2">Ocupado</span>'
+                : '<span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-2">Disponível</span>';
+
+              let acaoRodape = "";
+              if (h.ocupado_por) {
+                if (h.pode_cancelar) {
+                  acaoRodape = `
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="fw-medium text-danger small"><i class="bi bi-person-check-fill me-2"></i>${h.ocupado_por}</div>
+                                    <button class="btn btn-sm btn-outline-danger rounded-3 fw-bold px-3 shadow-sm" onclick="cancelarReserva(${h.reserva_id}, '${data}')">Cancelar</button>
+                                </div>`;
+                } else {
+                  acaoRodape = `<div class="fw-medium text-danger small"><i class="bi bi-person-circle me-2"></i>Prof. ${h.ocupado_por}</div>`;
+                }
+              } else {
+                acaoRodape = `<button class="btn btn-primary w-100 rounded-3 fw-bold py-2 shadow-sm" onclick="solicitarReserva('${h.id}', '${data}', '${h.turno}')">Reservar Horário</button>`;
+              }
+
+              div.className = `horario-card ${statusClass}`;
+              div.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="fw-bold d-block text-dark">${h.descricao}</span>
+                                <small class="text-muted"><i class="bi bi-clock me-1"></i>${h.inicio} às ${h.fim} <span class="badge bg-light text-dark ms-1">${h.turno}</span></small>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <div class="mt-3 pt-2 border-top border-light">${acaoRodape}</div>`;
+              conteiner.appendChild(div);
+            });
+          });
+      }
+
+      function solicitarReserva(horarioId, data, turnoDoHorario) {
+        document.getElementById("reserva-horario-id").value = horarioId;
+        document.getElementById("reserva-data").value = data;
+
+        const selectTurma = document.getElementById("reserva-turma");
+        const options = selectTurma.querySelectorAll("option");
+        let encontrouTurmaParaTurno = false;
+
+        selectTurma.value = "";
+
+        options.forEach((opt) => {
+          if (opt.value === "") {
+            opt.style.display = "block";
+          } else {
+            const turnoDaTurma = opt.getAttribute("data-turno");
+            if (turnoDaTurma === turnoDoHorario) {
+              opt.style.display = "block";
+              encontrouTurmaParaTurno = true;
+            } else {
+              opt.style.display = "none";
+            }
+          }
+        });
+
+        if (!encontrouTurmaParaTurno) {
+          showToast(
+            `Você não possui turmas no turno ${turnoDoHorario}.`,
+            "error",
+          );
+          return;
+        }
+
+        const modalReserva = new bootstrap.Modal(
+          document.getElementById("modalReserva"),
+        );
+        modalReserva.show();
+      }
+
+      function confirmarReserva() {
+        const turmaId = document.getElementById("reserva-turma").value;
+        const horarioId = document.getElementById("reserva-horario-id").value;
+        const data = document.getElementById("reserva-data").value;
+
+        if (!turmaId) {
+          showToast("Selecione uma turma!", "error");
+          return;
+        }
+
+        const modalElement = document.getElementById("modalReserva");
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) modalInstance.hide();
+
+        fetch("/api/reservar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recurso_id: salaIdAtiva,
+            data: data,
+            horario_id: horarioId,
+            turma_id: turmaId,
+          }),
+        })
+          .then((res) => res.json())
+          .then((dataResponse) => {
+            if (dataResponse.sucesso) {
+              showToast("Reserva confirmada!");
+              calendar.refetchEvents(); // Atualiza bolinhas no calendário
+              atualizarAgendaLateral(data);
+              carregarResumoDoDia(data);
+            } else {
+              showToast(dataResponse.erro, "error");
+            }
+          })
+          .catch(() => showToast("Erro de conexão.", "error"));
+      }
+
+      function cancelarReserva(reservaId, data) {
+        if (!confirm("Tem certeza que deseja cancelar?")) return;
+
+        fetch(`/api/reservar/${reservaId}`, { method: "DELETE" })
+          .then((res) => res.json())
+          .then((dataResponse) => {
+            if (dataResponse.sucesso) {
+              showToast("Reserva cancelada com sucesso.");
+              calendar.refetchEvents(); // Remove bolinha do calendário
+              atualizarAgendaLateral(data);
+              carregarResumoDoDia(data);
+            } else {
+              showToast(dataResponse.erro, "error");
+            }
+          })
+          .catch(() => showToast("Erro ao cancelar.", "error"));
+      }
+
+      function carregarResumoDoDia(data) {
+        const conteiner = document.getElementById("lista-agendamentos-geral");
+        const resumoTexto = document.getElementById("resumo-data-texto");
+        const dataBR = new Date(data + "T00:00:00").toLocaleDateString("pt-BR");
+
+        resumoTexto.innerText = "Agendamentos para o dia " + dataBR;
+
+        // Feedback visual de carregamento
+        conteiner.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary spinner-border-sm"></div>
+            <p class="small text-muted mt-2">Buscando ocupação da escola...</p>
+        </div>`;
+
+        fetch(`/api/agendamentos/dia/${data}`)
+          .then((res) => res.json())
+          .then((dados) => {
+            conteiner.innerHTML = "";
+
+            if (dados.length === 0) {
+              conteiner.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-calendar-x d-block fs-2 mb-2"></i>
+                        Nenhum agendamento para este dia.
+                    </div>`;
+              return;
+            }
+
+            dados.forEach((item) => {
+              const col = document.createElement("div");
+              col.className = "col-md-6 col-lg-4 mb-3";
+
+              // Lógica para lidar com um único recurso ou uma lista agrupada
+              let recursosHTML = "";
+              if (Array.isArray(item.recursos)) {
+                // Se o backend já enviar a lista agrupada
+                recursosHTML = item.recursos
+                  .map(
+                    (r) =>
+                      `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle me-1 mb-1">${r}</span>`,
+                  )
+                  .join("");
+              } else {
+                // Fallback para o formato antigo de um único recurso
+                recursosHTML = `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle me-1 mb-1">${item.recurso}</span>`;
+              }
+
+              col.innerHTML = `
+                    <div class="p-3 border rounded-3 bg-white shadow-sm h-100" style="border-left: 5px solid var(--accent) !important;">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge bg-primary">${item.horario}</span>
+                            <small class="text-muted fw-bold"><i class="bi bi-clock me-1"></i>${item.intervalo}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="d-block small text-uppercase fw-bold text-secondary" style="font-size: 0.65rem;">Recursos Reservados</label>
+                            <div class="mt-1">${recursosHTML}</div>
+                        </div>
+
+                        <div class="mb-1 text-dark">
+                            <strong><i class="bi bi-person-circle me-1"></i></strong> ${item.professor}
+                        </div>
+                        
+                        <div class="small text-secondary">
+                            <i class="bi bi-people-fill me-1"></i> ${item.turma} 
+                            <span class="badge bg-light text-dark border ms-1">${item.turno}</span>
+                        </div>
+                    </div>`;
+
+              conteiner.appendChild(col);
+            });
+          })
+          .catch((err) => {
+            console.error("Erro ao carregar resumo:", err);
+            conteiner.innerHTML = `
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                    <div>Erro ao conectar com o servidor.</div>
+                </div>`;
+          });
+      }
+    </script>
+  </body>
+</html>

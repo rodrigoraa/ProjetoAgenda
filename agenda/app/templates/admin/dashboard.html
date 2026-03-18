@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel Gestor - EduReserva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+      :root {
+        --adm-primary: #0f172a; /* Azul meia-noite premium */
+        --adm-bg: #f8fafc;      /* Fundo gelo bem suave */
+        --adm-accent: #2563eb;  /* Azul elétrico para destaques */
+      }
+      body {
+        background-color: var(--adm-bg);
+        font-family: "Inter", sans-serif;
+        color: #334155;
+      }
+      /* Navbar Premium */
+      .navbar {
+        background-color: var(--adm-primary) !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        padding: 15px 0;
+      }
+      /* Cartões flutuantes */
+      .card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        background: #fff;
+      }
+      /* Estatísticas do Topo */
+      .stat-icon {
+        width: 54px;
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+      }
+      /* Abas de Navegação Superiores */
+      .nav-pills {
+        background: white;
+        padding: 10px;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
+      }
+      .nav-pills .nav-link {
+        color: #64748b;
+        font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 12px;
+        transition: all 0.2s;
+      }
+      .nav-pills .nav-link.active {
+        background-color: var(--adm-accent);
+        color: white;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+      }
+      .nav-pills .nav-link:hover:not(.active) {
+        background-color: #f1f5f9;
+      }
+      /* Formulários Elevados */
+      .form-control, .form-select {
+        border-radius: 10px;
+        padding: 10px 15px;
+        border: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+        font-size: 0.95rem;
+      }
+      .form-control:focus, .form-select:focus {
+        border-color: var(--adm-accent);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        background-color: #fff;
+      }
+      /* Listas e Itens */
+      .list-group-item {
+        border: 1px solid #f1f5f9;
+        margin-bottom: 10px;
+        border-radius: 12px !important;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        padding: 15px 20px;
+        transition: all 0.2s;
+      }
+      .list-group-item:hover {
+        transform: translateX(4px);
+        border-color: #e2e8f0;
+      }
+      .turno-divider {
+        background: #e2e8f0;
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-weight: 700;
+        color: #475569;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-dark mb-4">
+      <div class="container d-flex justify-content-between align-items-center">
+        <span class="navbar-brand fw-bold d-flex align-items-center">
+          <div class="bg-white text-primary rounded p-1 me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+            <i class="bi bi-grid-fill fs-6"></i>
+          </div>
+          EduReserva
+          <span class="badge bg-primary bg-opacity-25 text-white ms-2 border border-primary" style="font-size: 0.65rem; letter-spacing: 1px;">PAINEL GESTOR</span>
+        </span>
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-light btn-sm rounded-pill px-4 fw-medium">
+          <i class="bi bi-display me-2"></i>Ver Área do Professor
+        </a>
+      </div>
+    </nav>
+
+    <div class="container pb-5">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for message in messages %}
+          <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i> 
+            <span class="fw-medium">{{ message }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="row g-4 mb-5">
+        <div class="col-md-4">
+          <div class="card p-4 d-flex flex-row align-items-center justify-content-between h-100 border-bottom border-primary border-4">
+            <div>
+              <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px;">Recursos</small>
+              <span class="fs-2 fw-bold d-block text-dark lh-1 mt-1">{{ recursos|length }}</span>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary fs-3">
+              <i class="bi bi-laptop"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card p-4 d-flex flex-row align-items-center justify-content-between h-100 border-bottom border-success border-4">
+            <div>
+              <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px;">Horários</small>
+              <span class="fs-2 fw-bold d-block text-dark lh-1 mt-1">{{ horarios|length }}</span>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success fs-3">
+              <i class="bi bi-clock-history"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card p-4 d-flex flex-row align-items-center justify-content-between h-100 border-bottom border-warning border-4">
+            <div>
+              <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px;">Turmas</small>
+              <span class="fs-2 fw-bold d-block text-dark lh-1 mt-1">{{ turmas|length }}</span>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning fs-3">
+              <i class="bi bi-people-fill"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="nav nav-pills nav-fill mb-4" id="pills-tab" role="tablist">
+        <li class="nav-item">
+          <button class="nav-link active shadow-sm" data-bs-toggle="pill" data-bs-target="#content-turmas">
+            <i class="bi bi-people me-2"></i>Gestão de Turmas
+          </button>
+        </li>
+        <li class="nav-item mx-2">
+          <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#content-horarios">
+            <i class="bi bi-calendar-range me-2"></i>Grades de Horário
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#content-recursos">
+            <i class="bi bi-door-closed me-2"></i>Salas e Equipamentos
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="content-turmas">
+          <div class="row">
+            <div class="col-md-5">
+              <div class="card p-4 h-100">
+                <h5 class="fw-bold mb-4 text-dark">
+                  <i class="bi bi-magic text-primary me-2"></i>Gerador de Turmas em Lote
+                </h5>
+                <form action="{{ url_for('admin.gerar_sequencia') }}" method="POST">
+                  <div class="row g-3 mb-3">
+                    <div class="col-6">
+                      <label class="small fw-bold text-secondary mb-1">Início (De):</label>
+                      <input type="number" name="inicio" class="form-control" value="1" />
+                    </div>
+                    <div class="col-6">
+                      <label class="small fw-bold text-secondary mb-1">Fim (Até):</label>
+                      <input type="number" name="fim" class="form-control" value="5" />
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="small fw-bold text-secondary mb-1">Nomenclatura (Ano/Série)</label>
+                    <input type="text" name="prefixo" class="form-control" value="Ano" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="small fw-bold text-secondary mb-1">Etapa (Ex: Ensino Fundamental)</label>
+                    <input type="text" name="sufixo" class="form-control" placeholder="E. Fundamental" />
+                  </div>
+                  <div class="mb-4">
+                    <label class="small fw-bold text-secondary mb-1">Turno de Estudo</label>
+                    <select name="turno" class="form-select border-primary fw-medium">
+                      <option value="Matutino">Matutino</option>
+                      <option value="Vespertino">Vespertino</option>
+                      <option value="Noturno">Noturno</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm rounded-3">
+                    Gerar Turmas
+                  </button>
+                </form>
+              </div>
+            </div>
+            <div class="col-md-7">
+              <div class="ps-md-4 mt-4 mt-md-0">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h5 class="fw-bold text-dark mb-0">Turmas Ativas no Sistema</h5>
+                  <form action="{{ url_for('admin.limpar_turmas') }}" method=\"POST\" onsubmit="return confirm('ATENÇÃO: Isso apagará TODAS as turmas e suas reservas. Tem certeza?');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill fw-medium">
+                          <i class="bi bi-trash3 me-1"></i>Limpar Tudo
+                      </button>
+                  </form>
+                </div>
+                
+                {% for turno_t in ['Matutino', 'Vespertino', 'Noturno'] %} 
+                  {% set turmas_turno = turmas | selectattr('turno', 'equalto', turno_t) | list %} 
+                  {% if turmas_turno %}
+                  <div class="mb-4 bg-white p-3 rounded-4 shadow-sm border border-light">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill mb-3 px-3 py-2 fw-bold">
+                        <i class="bi bi-sun me-1"></i> Turno {{ turno_t }}
+                    </span>
+                    <div class="d-flex flex-wrap gap-2">
+                      {% for t in turmas_turno %}
+                      <div class="card px-3 py-2 shadow-sm d-flex flex-row align-items-center border border-light bg-light">
+                        <span class="small fw-bold text-dark me-3">{{ t.nome }}</span>
+                        <button onclick="apagarTurma(this, '{{ t.id }}')" class="btn btn-link text-danger p-0 ms-auto" style="line-height: 0" title="Apagar Turma">
+                          <i class="bi bi-x-circle-fill fs-6"></i>
+                        </button>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  {% endif %} 
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="content-horarios">
+          <div class="row">
+            <div class="col-md-5">
+              <div class="card p-4 h-100">
+                <h5 class="fw-bold mb-4 text-dark">
+                  <i class="bi bi-calendar-range text-success me-2"></i>Criar Grade de Tempos
+                </h5>
+                <form action="{{ url_for('admin.gerar_grade') }}" method="POST">
+                  <div class="mb-3">
+                    <label class="small fw-bold text-secondary mb-1">Para qual Turno?</label>
+                    <select name="turno" class="form-select border-success fw-medium">
+                      <option value="Matutino">Matutino</option>
+                      <option value="Vespertino">Vespertino</option>
+                      <option value="Noturno">Noturno</option>
+                    </select>
+                  </div>
+                  <div class="row g-3 mb-3">
+                    <div class="col-6">
+                      <label class="small fw-bold text-secondary mb-1">Início da 1ª Aula</label>
+                      <input type="time" name="hora_inicio" class="form-control" value="07:00" />
+                    </div>
+                    <div class="col-6">
+                      <label class="small fw-bold text-secondary mb-1">Duração (min)</label>
+                      <input type="number" name="duracao" class="form-control" value="50" />
+                    </div>
+                  </div>
+                  
+                  <div class="bg-light p-3 rounded-3 mb-3 border">
+                      <div class="row g-2">
+                        <div class="col-6">
+                          <label class="small fw-bold text-secondary mb-1">Início do Intervalo</label>
+                          <input type="time" name="intervalo_inicio" class="form-control" value="09:30" />
+                        </div>
+                        <div class="col-6">
+                          <label class="small fw-bold text-secondary mb-1">Duração do Int. (min)</label>
+                          <input type="number" name="intervalo_duracao" class="form-control" value="20" />
+                        </div>
+                      </div>
+                  </div>
+
+                  <div class="mb-4">
+                    <label class="small fw-bold text-secondary mb-1">Qtd Total de Aulas no Turno</label>
+                    <input type="number" name="qtd_aulas" class="form-control" value="5" />
+                  </div>
+                  <button type="submit" class="btn btn-success w-100 fw-bold py-2 shadow-sm rounded-3">
+                    Gerar Grade Completa
+                  </button>
+                </form>
+              </div>
+            </div>
+            <div class="col-md-7 ps-md-4 mt-4 mt-md-0">
+              <h5 class="fw-bold text-dark mb-4">Grade Atual do Sistema</h5>
+              {% for turno_label in ['Matutino', 'Vespertino', 'Noturno'] %} 
+                {% set h_turno = horarios | selectattr('turno', 'equalto', turno_label) | list %} 
+                {% if h_turno %}
+                  <div class="turno-divider mt-2 mb-3">
+                    <i class="bi bi-clock me-1"></i> {{ turno_label }}
+                  </div>
+                  <div class="list-group list-group-flush border-0 mb-4">
+                  {% for h in h_turno %}
+                  <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success me-3 py-2 px-3 rounded-3 fs-6">
+                            {{ loop.index }}º Tempo
+                        </span>
+                        <span class="fw-bold text-dark fs-5">
+                            {{ h.hora_inicio.strftime('%H:%M') }} <span class="text-muted mx-1 fw-normal">até</span> {{ h.hora_fim.strftime('%H:%M') }}
+                        </span>
+                    </div>
+                    <button onclick="apagarHorario(this, '{{ h.id }}')" class="btn btn-sm text-danger bg-danger bg-opacity-10 rounded-circle" style="width: 35px; height: 35px;" title="Remover Horário">
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
+                  </div>
+                  {% endfor %} 
+                  </div>
+                {% endif %} 
+              {% endfor %}
+              
+              {% if not horarios %}
+                <div class="text-center py-5 text-muted bg-white rounded-4 border">
+                    <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                    Ainda não há horários cadastrados.
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="content-recursos">
+          <div class="row">
+            <div class="col-md-5">
+              <div class="card p-4">
+                <h5 class="fw-bold mb-4 text-dark">
+                  <i class="bi bi-plus-circle text-primary me-2"></i>Cadastrar Novo Recurso
+                </h5>
+                <form action="{{ url_for('admin.add_recurso') }}" method="POST">
+                  <div class="mb-3">
+                    <label class="small fw-bold text-secondary mb-1">Nome de Identificação</label>
+                    <input type="text" name="nome" class="form-control" placeholder="Ex: Laboratório de Informática 1" required />
+                  </div>
+                  <div class="mb-4">
+                    <label class="small fw-bold text-secondary mb-1">Categoria</label>
+                    <select name="tipo" class="form-select fw-medium">
+                      <option value="Sala de Aula">Sala de Aula</option>
+                      <option value="Laboratório">Laboratório</option>
+                      <option value="Equipamento Móvel">Equipamento Móvel</option>
+                      <option value="Quadra/Espaço">Quadra ou Espaço Aberto</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn" style="background-color: var(--adm-primary); color: white; font-weight: bold; padding: 10px; border-radius: 10px; width: 100%;">
+                    Salvar Recurso
+                  </button>
+                </form>
+              </div>
+            </div>
+            <div class="col-md-7 ps-md-4 mt-4 mt-md-0">
+              <h5 class="fw-bold text-dark mb-4">Salas e Equipamentos Cadastrados</h5>
+              
+              <div class="row g-3">
+              {% for r in recursos %}
+                <div class="col-12" id="recurso-{{ r.id }}">
+                    <div class="card p-3 d-flex flex-row justify-content-between align-items-center shadow-sm">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded p-3 me-3 fs-4">
+                                {% if r.tipo == 'Equipamento Móvel' %}
+                                    <i class="bi bi-projector-fill"></i>
+                                {% elif r.tipo == 'Laboratório' %}
+                                    <i class="bi bi-pc-display-horizontal"></i>
+                                {% else %}
+                                    <i class="bi bi-door-closed-fill"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">{{ r.nome }}</h6>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border fw-normal">{{ r.tipo }}</span>
+                            </div>
+                        </div>
+                        <button onclick="apagarRecurso('{{ r.id }}')" class="btn btn-light text-danger rounded-circle border">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+              {% endfor %}
+              </div>
+              
+              {% if not recursos %}
+                <div class="text-center py-5 text-muted bg-white rounded-4 border">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    Nenhum recurso cadastrado ainda.
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Funções JavaScript (comportamento suave sem piscar a tela)
+      function apagarHorario(botao, id) {
+        if (!confirm("Deseja realmente excluir este horário da grade?")) return;
+        fetch(`/admin/horario/delete/${id}?ajax=1`).then((res) => {
+          if (res.ok) {
+              const item = botao.closest(".list-group-item");
+              item.style.opacity = '0';
+              setTimeout(() => item.remove(), 300);
+          }
+        });
+      }
+
+      function apagarTurma(botao, id) {
+        if (!confirm("Excluir esta turma? (Isso também pode afetar as reservas vinculadas a ela)")) return;
+        fetch(`/admin/turma/delete/${id}?ajax=1`).then((res) => {
+          if (res.ok) {
+              const item = botao.closest(".card");
+              item.style.transform = 'scale(0.9)';
+              item.style.opacity = '0';
+              setTimeout(() => item.remove(), 200);
+          }
+        });
+      }
+      
+      function apagarRecurso(id) {
+          if (!confirm("Remover este recurso definitivamente?")) return;
+          fetch(`/admin/recurso/delete/${id}?ajax=1`).then((res) => {
+              if(res.ok) {
+                  const item = document.getElementById(`recurso-${id}`);
+                  item.style.transition = 'all 0.4s';
+                  item.style.opacity = '0';
+                  item.style.transform = 'translateX(20px)';
+                  setTimeout(() => item.remove(), 400);
+              }
+          });
+      }
+    </script>
+  </body>
+</html>
