@@ -8,13 +8,11 @@ load_dotenv(os.path.join(basedir, '.env'))
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "chave_padrao_123")
     
-    # --- ADICIONE ESTAS 4 LINHAS PARA SINCRONIZAR COM O PORTAL ---
+    # --- CONFIGURAÇÃO DE COOKIE COMPARTILHADO ---
     SESSION_COOKIE_DOMAIN = ".eesjv.com.br"
-    SESSION_COOKIE_SECURE = False
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_KEY_PREFIX = 'eesjv_session:'
-    # -------------------------------------------------------------
-    
+    SESSION_COOKIE_NAME = "session_eesjv"
+    # --------------------------------------------
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Se não houver nada no .env, ele cria um banco local na pasta do projeto
