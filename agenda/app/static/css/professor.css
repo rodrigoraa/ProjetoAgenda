@@ -7,10 +7,11 @@
 
 /* Reset e Estrutura Principal */
 html, body {
-    height: 100%;
+    height: 100vh; /* No PC, fica fixo */
     margin: 0;
     background-color: var(--bg-body);
     font-family: "Inter", sans-serif;
+    overflow: hidden; /* Trava o scroll geral no PC */
 }
 
 body {
@@ -21,7 +22,7 @@ body {
 /* Menu Superior */
 #sidebar {
     width: 100%;
-    background: var(--sidebar-bg); /* Fundo azul escuro */
+    background: var(--sidebar-bg);
     color: #f8fafc;
     min-height: 70px;
     z-index: 1000;
@@ -31,22 +32,22 @@ body {
 .nav-link.recurso-link {
     color: #94a3b8;
     border-radius: 10px;
-    background: rgba(255, 255, 255, 0.05); /* Leve destaque translúcido */
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid transparent;
 }
 
 .nav-link.recurso-link:hover, 
 .nav-link.recurso-link.active {
-    background: var(--accent); /* Azul brilhante */
+    background: var(--accent);
     color: #fff !important;
     border: 1px solid var(--accent);
 }
 
-/* Layout Flexível */
+/* Layout Flexível - Computador */
 .main-layout {
     display: flex;
     flex: 1;
-    overflow: hidden; /* Mantém scrolls independentes no PC */
+    overflow: hidden;
 }
 
 #main-content {
@@ -56,7 +57,7 @@ body {
 }
 
 #agenda-lateral {
-    width: 380px;
+    width: 400px;
     background: white;
     border-left: 1px solid #e2e8f0;
     padding: 25px;
@@ -80,19 +81,11 @@ body {
 .horario-card.ocupado { border-left: 4px solid #ef4444; background: #fef2f2; }
 .horario-card.livre { border-left: 4px solid #10b981; }
 
-/* Ajustes de Tamanho do Calendário */
-.fc-daygrid-day-frame {
-    padding: 4px !important;
-    min-height: 45px !important; 
-}
-.fc {
-    font-size: 0.85rem;
-}
-.fc-col-header-cell {
-    padding: 8px 0 !important;
-}
+.fc-daygrid-day-frame { padding: 4px !important; min-height: 45px !important; }
+.fc { font-size: 0.85rem; }
+.fc-col-header-cell { padding: 8px 0 !important; }
 
-/* Sistema de Avisos (Toasts) */
+/* Toasts */
 .toast-container {
     position: fixed;
     top: 20px;
@@ -118,10 +111,7 @@ body {
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
-.custom-toast.show {
-    transform: translateY(0);
-    opacity: 1;
-}
+.custom-toast.show { transform: translateY(0); opacity: 1; }
 .custom-toast.success { border-left: 8px solid #10b981; color: #064e3b; }
 .custom-toast.success i { color: #10b981; font-size: 1.8rem; }
 .custom-toast.error {
@@ -129,73 +119,47 @@ body {
     border: 1px solid #fca5a5;
     border-left: 8px solid #ef4444;
     color: #991b1b;
-    animation: tremer 0.4s ease-in-out;
 }
 .custom-toast.error i { color: #ef4444; font-size: 1.8rem; }
 
-@keyframes tremer {
-    0%, 100% { transform: translateX(0); }
-    20% { transform: translateX(-10px); }
-    40% { transform: translateX(10px); }
-    60% { transform: translateX(-10px); }
-    80% { transform: translateX(10px); }
-}
-
 /* =========================================
-   MOBILE (RESPONSIVIDADE UNIFICADA E CORRIGIDA)
+   MOBILE (O SEGREDO PARA iOS / SAFARI)
    ========================================= */
 @media (max-width: 992px) {
-    /* Ajuste da Barra Superior */
-    .nav-link.recurso-link {
-        padding: 10px 15px !important;
-        min-width: 50px; 
-    }
-    .nav-link.recurso-link i {
-        margin: 0 !important;
-        font-size: 1.3rem !important;
-    }
-
-    /* O SEGREDO DO CELULAR: LIBERAR A ROLAGEM AQUI */
-    body {
-        overflow-y: auto !important; 
+    /* Destrava o corpo da página completamente no celular */
+    html, body {
         height: auto !important;
+        overflow-y: auto !important; 
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important; /* Força scroll suave no iPhone */
     }
 
-    /* Ajuste do Layout da Tela */
     .main-layout {
         flex-direction: column; 
-        height: auto; 
-        overflow-y: visible !important;
+        height: auto !important;
+        overflow: visible !important;
     }
 
     #main-content {
         height: auto !important; 
-        min-height: 400px; 
         flex: none;
-        padding: 15px; /* Reduzi o padding no celular para dar mais espaço */
+        padding: 15px;
+        overflow: visible !important;
     }
 
-    /* Ajuste da Aba de Horários */
     #agenda-lateral {
-        width: 100%;
+        width: 100% !important;
         height: auto !important;
         border-left: none;
         border-top: 2px solid #e2e8f0;
-        overflow-y: visible !important;
         flex: none;
         padding: 15px;
+        overflow: visible !important;
     }
 
-    /* Ajustes Gerais para itens do celular */
-    .recurso-item, 
-    .badge-recurso { 
-        display: block !important;
-        width: 100% !important;
-        padding: 12px 15px !important;
-        margin-bottom: 8px !important;
-        font-size: 16px !important;
-        border-radius: 8px !important;
-        text-align: center;
-        box-sizing: border-box;
+    .nav-link.recurso-link {
+        padding: 10px 15px !important;
+        min-width: 50px; 
     }
+    .nav-link.recurso-link i { margin: 0 !important; font-size: 1.3rem !important; }
 }
