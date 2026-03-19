@@ -206,14 +206,6 @@ background-color: rgba(59, 130, 246, 0.1) !important;
 border: 2px solid var(--accent) !important;
 }
 
-/* Estiliza os eventos (bolinhas de ocupação) */
-.fc-event {
-border: none !important;
-background-color: var(--accent) !important;
-border-radius: 4px !important;
-font-size: 0.75rem !important;
-padding: 1px 4px !important;
-}
 /* Estilo para o Toast de Notificação */
 .toast-container {
 position: fixed;
@@ -245,22 +237,18 @@ border-left-color: #10b981;
 border-left-color: #ef4444;
 }
 
-/* Destaque para o dia selecionado no calendário */
-.fc-day-selected {
-background-color: rgba(59, 130, 246, 0.1) !important;
-border: 2px solid var(--accent) !important;
-}
 /* Mantém o calendário limpo */
 .fc-daygrid-event-harness {
 margin-top: 1px !important;
 }
 
 .fc-event {
-font-size: 0.7rem !important;
-padding: 2px 4px !important;
-border-radius: 4px !important;
-border: none !important;
-text-align: center;
+  border: none !important;
+  background-color: var(--accent) !important;
+  border-radius: 4px !important;
+  font-size: 0.7rem !important;
+  padding: 2px 4px !important;
+  text-align: center;
 }
 
 /* Esconde o excesso se houver muitos eventos (o "more" link) */
