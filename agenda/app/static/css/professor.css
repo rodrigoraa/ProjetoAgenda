@@ -155,16 +155,22 @@ body {
         font-size: 1.3rem !important;
     }
 
+    /* O SEGREDO DO CELULAR: LIBERAR A ROLAGEM AQUI */
+    body {
+        overflow-y: auto !important; 
+        height: auto !important;
+    }
+
     /* Ajuste do Layout da Tela */
     .main-layout {
         flex-direction: column; 
         height: auto; 
-        overflow-y: visible;
+        overflow-y: visible !important;
     }
 
     #main-content {
-        height: 60vh; 
-        min-height: 450px; 
+        height: auto !important; 
+        min-height: 400px; 
         flex: none;
         padding: 15px; /* Reduzi o padding no celular para dar mais espaço */
     }
@@ -172,10 +178,10 @@ body {
     /* Ajuste da Aba de Horários */
     #agenda-lateral {
         width: 100%;
-        height: auto;
+        height: auto !important;
         border-left: none;
         border-top: 2px solid #e2e8f0;
-        overflow-y: visible;
+        overflow-y: visible !important;
         flex: none;
         padding: 15px;
     }
