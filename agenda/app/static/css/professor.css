@@ -207,3 +207,22 @@ body {
     60% { transform: translateX(-10px); }
     80% { transform: translateX(10px); }
 }
+
+@media (max-width: 992px) {
+    /* Deixa os recursos maiores e em formato de lista/bloco */
+    .recurso-item, 
+    .fc-event, /* Caso use eventos arrastáveis */
+    .badge-recurso { 
+        display: block !important;
+        width: 100% !important;
+        padding: 12px 15px !important;
+        margin-bottom: 8px !important;
+        font-size: 16px !important;
+        border-radius: 8px !important;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    /* Oculta os recursos da tela principal se for usar só o Modal (Opcional) */
+    lista-recursos { display: none; }
+}

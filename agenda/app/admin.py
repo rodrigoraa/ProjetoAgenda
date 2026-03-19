@@ -9,7 +9,6 @@ from flask import (
     flash,
 )
 from flask_login import login_required, current_user
-from app.models import db, Recurso, HorarioAula, Turma
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 

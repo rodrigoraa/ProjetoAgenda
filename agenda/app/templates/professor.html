@@ -2,6 +2,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portal do Professor - Agenda</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -20,43 +21,58 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/professor.css') }}"
     />
+    <style>
+      @media (max-width: 992px) {
+        .main-layout {
+          flex-direction: column !important;
+        }
+        #agenda-lateral {
+          width: 100% !important;
+          border-left: none !important;
+          border-top: 2px solid #e2e8f0;
+        }
+        .fc-toolbar {
+          flex-direction: column;
+          gap: 10px;
+        }
+      }
+    </style>
   </head>
-  <body class="d-flex flex-column">
-    <aside
+  <body class="d-flex flex-column" style="height: 100vh; overflow: hidden">
+    <header
       id="sidebar"
-      class="px-4 py-2 d-flex flex-row align-items-center justify-content-between flex-wrap"
+      class="px-4 py-3 d-flex flex-row align-items-center justify-content-between flex-wrap shadow-sm z-3"
     >
-      <div class="d-flex align-items-center gap-3">
-        <div class="d-flex align-items-center">
-          <div class="bg-primary text-white rounded p-2 me-2">
-            <i class="bi bi-calendar-check-fill"></i>
-          </div>
-          <h4 class="mb-0 fw-bold text-white d-none d-sm-block">
-            Agendamentos
-          </h4>
+      <div class="d-flex align-items-center gap-3 mb-2 mb-md-0">
+        <div class="bg-primary text-white rounded p-2 me-2">
+          <i class="bi bi-calendar-check-fill"></i>
         </div>
-
-        <div class="border-start border-secondary ps-3 d-none d-md-block">
-          <p
-            class="text-uppercase small fw-bold text-secondary mb-0"
-            style="font-size: 0.65rem"
-          >
-            Professor(a)
-          </p>
-          <h6 class="text-white mb-0" style="font-size: 0.9rem">{{ nome }}</h6>
+        <div class="d-none d-sm-block">
+          <h5 class="mb-0 fw-bold text-white">EduReserva</h5>
+          <small class="text-white-50">Prof. {{ nome }}</small>
         </div>
       </div>
 
-      <ul class="nav nav-pills d-flex flex-row gap-2 overflow-x-auto">
+      <ul
+        class="nav nav-pills d-flex flex-row gap-2 overflow-x-auto flex-nowrap pb-2 pb-md-0"
+        style="max-width: 60%"
+      >
         {% for r in recursos %}
         <li class="nav-item">
-          <a
-            class="nav-link recurso-link fw-medium py-1 px-3"
-            style="font-size: 0.85rem; cursor: pointer"
-            onclick="selecionarRecurso({{ r.id }}, '{{ r.nome }}', this)"
+          <div
+            class="nav-link bg-dark text-light border border-secondary rounded-pill px-3 py-1"
+            style="font-size: 0.85rem; white-space: nowrap"
           >
-            <i class="bi bi-hdd-network me-1"></i>{{ r.nome }}
-          </a>
+            {% if 'Laboratório' in r.nome or 'Lab' in r.nome %}
+            <i class="bi bi-pc-display me-1 text-info"></i>
+            {% elif 'Caixa' in r.nome or 'Som' in r.nome %}
+            <i class="bi bi-speaker me-1 text-warning"></i>
+            {% elif 'Projetor' in r.nome or 'Data' in r.nome %}
+            <i class="bi bi-projector me-1 text-success"></i>
+            {% else %}
+            <i class="bi bi-door-open me-1 text-primary"></i>
+            {% endif %} {{ r.nome }}
+          </div>
         </li>
         {% endfor %}
       </ul>
@@ -69,72 +85,68 @@
           <i class="bi bi-box-arrow-left me-1"></i>Sair
         </a>
       </div>
-    </aside>
+    </header>
 
-    <div class="main-layout">
-      <main id="main-content" class="p-3">
-        <div class="mb-4">
-          <h2 class="fw-bold text-dark" id="titulo-recurso">
-            Selecione um recurso
-          </h2>
+    <div class="main-layout d-flex w-100" style="flex: 1; overflow: hidden">
+      <main
+        id="main-content"
+        class="p-4 bg-light"
+        style="flex: 1; overflow-y: auto"
+      >
+        <div class="mb-3">
+          <h3 class="fw-bold text-dark">
+            <i class="bi bi-calendar3 me-2"></i>Calendário de Reservas
+          </h3>
           <p class="text-muted">
-            Clique em um laboratório para gerenciar as reservas.
+            Clique em um dia no calendário para reservar um laboratório ou
+            equipamento.
           </p>
         </div>
-
-        <div id="calendar-container">
+        <div
+          id="calendar-container"
+          class="bg-white p-3 rounded-4 shadow-sm border"
+        >
           <div id="calendar"></div>
-        </div>
-
-        <div class="card mt-4 shadow-sm border-0 rounded-4">
-          <div class="card-header bg-white border-0 pt-4 px-4">
-            <h5 class="fw-bold text-dark mb-0">
-              <i class="bi bi-calendar-check text-primary me-2"></i>Ocupação
-              Geral da Escola
-            </h5>
-            <p class="text-muted small mb-0" id="resumo-data-texto">
-              Selecione uma data no calendário.
-            </p>
-          </div>
-          <div class="card-body px-4 pb-4">
-            <div id="lista-agendamentos-geral" class="row g-3">
-              <div class="text-center text-muted py-5">
-                <i class="bi bi-info-circle me-1"></i> Clique em um dia.
-              </div>
-            </div>
-          </div>
         </div>
       </main>
 
-      <aside id="agenda-lateral">
-        <div class="mb-4 pb-3 border-bottom">
-          <h5 class="fw-bold mb-1 text-dark" id="data-selecionada-titulo">
-            Agenda do Dia
+      <aside
+        id="agenda-lateral"
+        class="bg-white p-4"
+        style="width: 400px; overflow-y: auto; border-left: 1px solid #e2e8f0"
+      >
+        <div class="mb-4 pb-3 border-bottom text-center">
+          <h5 class="fw-bold mb-1 text-dark" id="resumo-data-texto">
+            Ocupação do Dia
           </h5>
-          <p class="text-muted small mb-0" id="data-selecionada-sub">
-            Selecione um dia
+          <p class="text-muted small mb-0">
+            Selecione uma data para ver quem está usando os recursos.
           </p>
         </div>
-        <div id="lista-horarios">
-          <div class="text-center text-muted mt-5">
-            <i class="bi bi-calendar2-x fs-1 d-block mb-3 text-light"></i>
-            <p>Escolha um dia para ver horários.</p>
+
+        <div id="lista-agendamentos-geral" class="d-flex flex-column gap-3">
+          <div class="text-center text-muted py-5 mt-4">
+            <i
+              class="bi bi-calendar2-x fs-1 d-block mb-3"
+              style="color: #cbd5e1"
+            ></i>
+            <p>Clique num dia do calendário para visualizar.</p>
           </div>
         </div>
       </aside>
     </div>
+
     <div
       class="modal fade"
-      id="modalReserva"
+      id="modalAgendamento"
       tabindex="-1"
-      aria-labelledby="modalReservaLabel"
       aria-hidden="true"
     >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
           <div class="modal-header bg-primary text-white border-0 py-3">
-            <h5 class="modal-title fw-bold" id="modalReservaLabel">
-              Confirmar Agendamento
+            <h5 class="modal-title fw-bold">
+              <i class="bi bi-plus-circle me-2"></i>Nova Reserva
             </h5>
             <button
               type="button"
@@ -145,349 +157,338 @@
           </div>
           <div class="modal-body p-4">
             <form id="formReserva">
-              <input type="hidden" id="reserva-data" />
-              <input type="hidden" id="reserva-horario-id" />
+              <div class="mb-3">
+                <label
+                  class="form-label fw-semibold text-secondary small text-uppercase"
+                  >Data Selecionada</label
+                >
+                <input
+                  type="date"
+                  class="form-control form-control-lg bg-light fw-bold text-primary"
+                  id="modalData"
+                  readonly
+                />
+              </div>
 
               <div class="mb-3">
                 <label
-                  for="reserva-turma"
-                  class="form-label fw-semibold text-secondary"
-                  >Para qual turma deseja reservar?</label
+                  class="form-label fw-semibold text-secondary small text-uppercase"
+                  >1. Qual o Recurso/Sala?</label
                 >
                 <select
-                  id="reserva-turma"
+                  id="modalRecurso"
                   class="form-select form-select-lg border-2"
+                  required
                 >
                   <option value="" selected disabled>
-                    Clique para selecionar...
+                    Selecione um recurso...
                   </option>
-                  {% for t in turmas %}
-                  <option value="{{ t.id }}" data-turno="{{ t.turno }}">
-                    {{ t.nome }} ({{ t.turno }})
-                  </option>
+                  {% for r in recursos %}
+                  <option value="{{ r.id }}">{{ r.nome }}</option>
                   {% endfor %}
                 </select>
-                <div class="form-text mt-2">
-                  <i class="bi bi-info-circle me-1"></i> Apenas turmas do mesmo
-                  turno do horário escolhido aparecerão aqui.
-                </div>
+              </div>
+
+              <div class="mb-3">
+                <label
+                  class="form-label fw-semibold text-secondary small text-uppercase"
+                  >2. Qual o Turno?</label
+                >
+                <select
+                  id="modalTurno"
+                  class="form-select form-select-lg border-2"
+                  required
+                  disabled
+                >
+                  <option value="" selected disabled>
+                    Selecione a sala primeiro...
+                  </option>
+                  <option value="Matutino">Matutino</option>
+                  <option value="Vespertino">Vespertino</option>
+                  <option value="Noturno">Noturno</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label
+                  class="form-label fw-semibold text-secondary small text-uppercase"
+                  >3. Qual a Turma?</label
+                >
+                <select
+                  id="modalTurma"
+                  class="form-select form-select-lg border-2"
+                  required
+                  disabled
+                >
+                  <option value="" selected disabled>
+                    Selecione o turno primeiro...
+                  </option>
+                </select>
+              </div>
+
+              <div class="mb-4">
+                <label
+                  class="form-label fw-semibold text-secondary small text-uppercase"
+                  >4. Qual o Horário?</label
+                >
+                <select
+                  id="modalHorario"
+                  class="form-select form-select-lg border-2"
+                  required
+                  disabled
+                >
+                  <option value="" selected disabled>
+                    Selecione o turno primeiro...
+                  </option>
+                </select>
+              </div>
+
+              <div class="d-grid mt-2">
+                <button
+                  type="button"
+                  id="btnConfirmar"
+                  class="btn btn-primary btn-lg fw-bold"
+                  onclick="confirmarReserva()"
+                  disabled
+                >
+                  <i class="bi bi-check2-circle me-1"></i> Confirmar Reserva
+                </button>
               </div>
             </form>
-          </div>
-          <div class="modal-footer border-0 p-4 pt-0">
-            <button
-              type="button"
-              class="btn btn-light fw-medium px-4"
-              data-bs-dismiss="modal"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              class="btn btn-primary fw-bold px-4"
-              onclick="confirmarReserva()"
-            >
-              <i class="bi bi-check2-circle me-1"></i> Confirmar Reserva
-            </button>
           </div>
         </div>
       </div>
     </div>
 
+    <div
+      id="toast-container"
+      class="toast-container position-fixed top-0 start-50 translate-middle-x mt-3"
+      style="z-index: 9999"
+    ></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      let salaIdAtiva = null;
-      let dataAtiva = null;
       let calendar;
+      let horariosDaSala = []; // Vai guardar os horários da API
+
+      // Carregando todas as turmas do backend para o JavaScript
+      const todasAsTurmas = [
+        {% for t in turmas %}
+          { id: "{{ t.id }}", nome: "{{ t.nome }}", turno: "{{ t.turno }}" },
+        {% endfor %}
+      ];
 
       document.addEventListener("DOMContentLoaded", function () {
         var calendarEl = document.getElementById("calendar");
         calendar = new FullCalendar.Calendar(calendarEl, {
           initialView: "dayGridMonth",
           locale: "pt-br",
-          headerToolbar: {
-            left: "prev,next today",
-            center: "title",
-            right: "",
-          },
+          headerToolbar: { left: "prev,next", center: "title", right: "today" },
           buttonText: { today: "Hoje" },
-
-          height: 450,
-          contentHeight: 400,
-          aspectRatio: 2.2,
-          fixedWeekCount: false,
-
+          height: window.innerWidth < 992 ? 400 : 550,
+          contentHeight: 'auto',
+          aspectRatio: 1.5,
           events: "/api/eventos",
+
           dateClick: function (info) {
-            document
-              .querySelectorAll(".fc-day")
-              .forEach((el) => el.classList.remove("fc-day-ritmo-click"));
-            info.dayEl.classList.add("fc-day-ritmo-click");
-            dataAtiva = info.dateStr;
-            carregarResumoDoDia(dataAtiva);
-            if (salaIdAtiva) atualizarAgendaLateral(dataAtiva);
+            document.querySelectorAll(".fc-day").forEach((el) => el.classList.remove("bg-primary-subtle"));
+            info.dayEl.classList.add("bg-primary-subtle");
+            const dataClicada = info.dateStr;
+
+            carregarResumoDoDia(dataClicada);
+
+            // Reseta o Pop-up
+            document.getElementById("modalData").value = dataClicada;
+            document.getElementById("modalRecurso").value = "";
+
+            resetarCamposAbaixo("recurso");
+
+            new bootstrap.Modal(document.getElementById("modalAgendamento")).show();
           },
         });
         calendar.render();
       });
 
-      function selecionarRecurso(id, nome, el) {
-        salaIdAtiva = id;
-        document.getElementById("titulo-recurso").innerText = nome;
-        document
-          .querySelectorAll(".recurso-link")
-          .forEach((l) => l.classList.remove("active"));
-        el.classList.add("active");
-        if (dataAtiva) atualizarAgendaLateral(dataAtiva);
-      }
+      // ==========================================
+      // LÓGICA DE CASCATA DO MODAL
+      // ==========================================
 
-      function atualizarAgendaLateral(data) {
-        const conteiner = document.getElementById("lista-horarios");
-        conteiner.innerHTML =
-          '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+      // 1. Quando escolhe o Recurso -> Busca API e libera Turno
+      document.getElementById('modalRecurso').addEventListener('change', function() {
+        let salaId = this.value;
+        let data = document.getElementById('modalData').value;
 
-        fetch(`/api/horarios/${salaIdAtiva}/${data}`)
-          .then((res) => res.json())
-          .then((horarios) => {
-            conteiner.innerHTML = "";
-            horarios.forEach((h) => {
-              const status = h.ocupado_por ? "ocupado" : "livre";
-              const card = document.createElement("div");
-              card.className = `horario-card ${status}`;
-              card.innerHTML = `
-                <div class="d-flex justify-content-between">
-                  <span class="fw-bold">${h.descricao || h.intervalo || "Horário"}</span>
-                  <span class="badge ${h.ocupado_por ? "bg-danger" : "bg-success"}">${h.ocupado_por ? "Ocupado" : "Livre"}</span>
-                </div>
-                <small class="text-muted">${h.inicio || ""} ${h.fim ? "- " + h.fim : ""}</small>
-                <div class="mt-3">
-                  ${
-                    h.ocupado_por
-                      ? h.pode_cancelar
-                        ? `<button class="btn btn-sm btn-outline-danger w-100" onclick="cancelarReserva(${h.reserva_id}, '${data}')">Cancelar Minha Reserva</button>`
-                        : `<small class="text-danger">Reservado por: ${h.ocupado_por}</small>`
-                      : `<button class="btn btn-sm btn-primary w-100" onclick="solicitarReserva('${h.id}', '${data}', '${h.turno}')">Reservar</button>`
-                  }
-                </div>
-              `;
-              conteiner.appendChild(card);
-            });
+        resetarCamposAbaixo("recurso");
+
+        let turnoSelect = document.getElementById("modalTurno");
+        turnoSelect.innerHTML = '<option value="">Carregando turnos...</option>';
+
+        // Busca horários do recurso na API
+        fetch(`/api/horarios/${salaId}/${data}`)
+          .then(res => res.json())
+          .then(horarios => {
+            horariosDaSala = horarios; // Salva para filtrar depois
+
+            turnoSelect.disabled = false;
+            turnoSelect.innerHTML = `
+              <option value="" selected disabled>Escolha o turno...</option>
+              <option value="Matutino">Matutino</option>
+              <option value="Vespertino">Vespertino</option>
+              <option value="Noturno">Noturno</option>
+            `;
+          })
+          .catch(() => {
+            turnoSelect.innerHTML = '<option value="" disabled>Erro ao buscar dados.</option>';
           });
-      }
+      });
 
-      function solicitarReserva(horarioId, data, turnoHorario) {
-        document.getElementById("reserva-horario-id").value = horarioId;
-        document.getElementById("reserva-data").value = data;
+      // 2. Quando escolhe o Turno -> Libera e filtra Turmas e Horários
+      document.getElementById('modalTurno').addEventListener('change', function() {
+        let turnoEscolhido = this.value;
 
-        const select = document.getElementById("reserva-turma");
-        let temTurma = false;
+        // ---- A. Filtrar Turmas ----
+        let turmaSelect = document.getElementById('modalTurma');
+        turmaSelect.disabled = false;
+        turmaSelect.innerHTML = '<option value="" selected disabled>Escolha sua turma...</option>';
 
-        Array.from(select.options).forEach((opt) => {
-          if (opt.value === "") return;
-          const turnoTurma = opt.getAttribute("data-turno");
+        let turmasFiltradas = todasAsTurmas.filter(t => t.turno === turnoEscolhido);
+        if(turmasFiltradas.length > 0) {
+            turmasFiltradas.forEach(t => {
+                turmaSelect.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
+            });
+        } else {
+            turmaSelect.innerHTML = '<option value="" disabled>Nenhuma turma neste turno.</option>';
+        }
 
-          // Tratamento para não bugar caso o backend não mande o turno ("undefined")
-          if (
-            turnoHorario === "undefined" ||
-            !turnoHorario ||
-            turnoTurma === turnoHorario
-          ) {
-            opt.style.display = "block";
-            temTurma = true;
-          } else {
-            opt.style.display = "none";
+        // ---- B. Filtrar Horários ----
+        let horarioSelect = document.getElementById('modalHorario');
+        horarioSelect.disabled = false;
+        horarioSelect.innerHTML = '<option value="" selected disabled>Escolha um horário livre...</option>';
+
+        let temLivre = false;
+        horariosDaSala.forEach(h => {
+          // Checa se o horário pertence ao turno E se está livre
+          if (h.turno === turnoEscolhido && !h.ocupado_por) {
+            horarioSelect.innerHTML += `<option value="${h.id}">Livre: ${h.descricao || ''} (${h.inicio} às ${h.fim})</option>`;
+            temLivre = true;
           }
         });
 
-        if (!temTurma) {
-          const t =
-            turnoHorario !== "undefined" && turnoHorario
-              ? turnoHorario
-              : "escolhido";
-          showToast(
-            "Você não tem turmas cadastradas para o turno " + t,
-            "error",
-          );
-          return;
+        if (!temLivre) {
+          horarioSelect.innerHTML = '<option value="" disabled>Sem horários livres para este turno.</option>';
         }
+      });
 
-        new bootstrap.Modal(document.getElementById("modalReserva")).show();
+      // Libera botão Confirmar apenas quando escolher o horário
+      document.getElementById('modalHorario').addEventListener('change', function() {
+          document.getElementById('btnConfirmar').disabled = false;
+      });
+
+      // Função auxiliar para resetar opções do formulário
+      function resetarCamposAbaixo(nivel) {
+          if (nivel === "recurso") {
+             document.getElementById("modalTurno").disabled = true;
+             document.getElementById("modalTurno").innerHTML = '<option value="" selected disabled>Selecione a sala primeiro...</option>';
+          }
+
+          document.getElementById("modalTurma").disabled = true;
+          document.getElementById("modalTurma").innerHTML = '<option value="" selected disabled>Selecione o turno primeiro...</option>';
+
+          document.getElementById("modalHorario").disabled = true;
+          document.getElementById("modalHorario").innerHTML = '<option value="" selected disabled>Selecione o turno primeiro...</option>';
+
+          document.getElementById('btnConfirmar').disabled = true;
       }
 
+      // ==========================================
+      // ENVIO DA RESERVA E RESUMO DO DIA (Mantidos)
+      // ==========================================
       function confirmarReserva() {
-        const selectTurma = document.getElementById("reserva-turma");
-        const inputData = document.getElementById("reserva-data");
-        const inputHorario = document.getElementById("reserva-horario-id");
+        const recursoId = document.getElementById("modalRecurso").value;
+        const turmaId = document.getElementById("modalTurma").value;
+        const horarioId = document.getElementById("modalHorario").value;
+        const data = document.getElementById("modalData").value;
 
-        if (!selectTurma || !inputData || !inputHorario) {
-          showToast(
-            "Erro interno: Campos do formulário não encontrados.",
-            "error",
-          );
+        if (!recursoId || !turmaId || !horarioId) {
+          showToast("Preencha todos os campos antes de confirmar!", "error");
           return;
         }
-
-        const turmaId = selectTurma.value;
-
-        if (!turmaId || turmaId === "") {
-          showToast(
-            "Por favor, selecione uma turma antes de confirmar!",
-            "error",
-          );
-          return;
-        }
-
-        if (typeof salaIdAtiva === "undefined" || !salaIdAtiva) {
-          showToast(
-            "Erro: O sistema perdeu a referência do laboratório.",
-            "error",
-          );
-          return;
-        }
-
-        const payload = {
-          recurso_id: salaIdAtiva,
-          data: inputData.value,
-          horario_id: inputHorario.value,
-          turma_id: turmaId,
-        };
 
         fetch("/api/reservar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ recurso_id: recursoId, turma_id: turmaId, horario_id: horarioId, data: data }),
         })
           .then((res) => res.json())
-          .then((data) => {
-            if (data.sucesso) {
+          .then((resposta) => {
+            if (resposta.sucesso) {
               showToast("Reserva confirmada com sucesso!");
-
-              // FECHAR O MODAL CORRETAMENTE
-              const modalEl = document.getElementById("modalReserva");
-              if (modalEl) {
-                const modalObj = bootstrap.Modal.getInstance(modalEl);
-                if (modalObj) modalObj.hide();
-
-                document
-                  .querySelectorAll(".modal-backdrop")
-                  .forEach((el) => el.remove());
-                document.body.classList.remove("modal-open");
-                document.body.style.overflow = "";
-                document.body.style.paddingRight = "";
-              }
-
-              selectTurma.value = "";
-
-              // ATUALIZAR OS DADOS DO ECRÃ
-              atualizarAgendaLateral(payload.data);
-              carregarResumoDoDia(payload.data);
-              if (typeof calendar !== "undefined") {
-                calendar.refetchEvents();
-              }
+              bootstrap.Modal.getInstance(document.getElementById("modalAgendamento")).hide();
+              carregarResumoDoDia(data);
+              calendar.refetchEvents();
             } else {
-              // PROTEÇÃO ANTI-UNDEFINED NO TOAST
-              showToast(
-                data.erro ||
-                  data.mensagem ||
-                  "Erro desconhecido ao processar a reserva.",
-                "error",
-              );
+              showToast(resposta.erro || resposta.mensagem || "Erro ao reservar.", "error");
             }
           })
-          .catch((err) => {
-            console.error("Erro no backend:", err);
-            showToast("Erro de ligação com o servidor.", "error");
-          });
+          .catch(() => showToast("Erro de comunicação com o servidor.", "error"));
       }
 
       function cancelarReserva(id, data) {
-        if (!confirm("Deseja cancelar?")) return;
+        if (!confirm("Deseja realmente cancelar sua reserva?")) return;
         fetch(`/api/reservar/${id}`, { method: "DELETE" })
           .then((res) => res.json())
           .then((d) => {
-            showToast("Reserva cancelada");
-            atualizarAgendaLateral(data);
-            calendar.refetchEvents();
+            showToast("Reserva cancelada com sucesso.");
             carregarResumoDoDia(data);
+            calendar.refetchEvents();
           });
       }
 
       function carregarResumoDoDia(data) {
         const container = document.getElementById("lista-agendamentos-geral");
-        document.getElementById("resumo-data-texto").innerText =
-          "Ocupação em: " + data;
+        document.getElementById("resumo-data-texto").innerText = "Ocupação em: " + data.split('-').reverse().join('/');
+        container.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
 
         fetch(`/api/agendamentos/dia/${data}`)
           .then((res) => res.json())
           .then((dados) => {
-            container.innerHTML = dados.length
-              ? ""
-              : "<p class='text-center w-100'>Nenhuma reserva hoje.</p>";
+            container.innerHTML = dados.length ? "" : `
+              <div class="text-center text-muted py-5 mt-3 bg-light rounded-4 border border-dashed">
+                <i class="bi bi-cup-hot fs-1 d-block mb-2"></i>Nenhuma aula ou equipamento reservado hoje.
+              </div>`;
 
             dados.forEach((item) => {
-              // --- PROTEÇÃO ANTI-UNDEFINED DO CARD DE OCUPAÇÃO GERAL ---
-              let nomeDoRecurso = "Recurso sem nome";
-
-              if (item.recursos && Array.isArray(item.recursos)) {
-                // Se o backend enviar um array (ex: [Laboratório, Projetor])
-                nomeDoRecurso = item.recursos.join(", ");
-              } else {
-                // Se enviar texto simples, tenta pegar a variável correta
-                nomeDoRecurso =
-                  item.recurso ||
-                  item.nome_recurso ||
-                  item.sala ||
-                  "Recurso Reservado";
-              }
-
-              const col = document.createElement("div");
-              col.className = "col-md-6 col-lg-4";
-              col.innerHTML = `
-                    <div class="p-3 border rounded-3 bg-light shadow-sm">
-                        <span class="badge bg-primary mb-2">${item.horario || item.intervalo || ""}</span>
-                        <h6 class="mb-1 fw-bold text-dark">${nomeDoRecurso}</h6>
-                        <small class="d-block text-secondary">
-                          <i class="bi bi-person-fill me-1"></i>${item.professor || "Professor"}
-                        </small>
-                        <small class="d-block text-secondary mt-1">
-                          <i class="bi bi-people-fill me-1"></i>${item.turma || "Turma"} ${item.turno ? `(${item.turno})` : ""}
-                        </small>
-                    </div>`;
-              container.appendChild(col);
+              let nomeRecursos = Array.isArray(item.recursos) ? item.recursos.join(", ") : (item.recurso || item.sala || "Recurso");
+              const div = document.createElement("div");
+              div.className = "card border-0 shadow-sm rounded-4 mb-2";
+              div.style.borderLeft = "4px solid #3b82f6 !important";
+              div.innerHTML = `
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-bold px-2 py-1">
+                      <i class="bi bi-clock me-1"></i>${item.horario || item.intervalo || 'Horário'}
+                    </span>
+                    ${item.pode_cancelar ? `<button class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill" onclick="cancelarReserva(${item.reserva_id}, '${data}')"><i class="bi bi-trash"></i></button>` : ``}
+                  </div>
+                  <h6 class="fw-bold mb-1 text-dark">${nomeRecursos}</h6>
+                  <div class="d-flex align-items-center text-secondary small mt-2">
+                    <i class="bi bi-person-fill me-1"></i> <span class="me-3">${item.professor || 'Professor'}</span>
+                    <i class="bi bi-people-fill me-1"></i> <span>${item.turma || 'Turma'}</span>
+                  </div>
+                </div>`;
+              container.appendChild(div);
             });
           })
-          .catch((err) => {
-            container.innerHTML =
-              "<p class='text-center text-danger w-100'>Erro ao carregar dados do servidor.</p>";
-          });
+          .catch(() => container.innerHTML = "<p class='text-center text-danger'>Erro ao carregar os dados.</p>");
       }
 
       function showToast(msg, tipo = "success") {
         let c = document.getElementById("toast-container");
-        if (!c) {
-          c = document.createElement("div");
-          c.id = "toast-container";
-          c.className = "toast-container";
-          document.body.appendChild(c);
-        }
-
         const t = document.createElement("div");
-        t.className = `custom-toast ${tipo}`;
-
-        const icone =
-          tipo === "error"
-            ? "bi-exclamation-octagon-fill"
-            : "bi-check-circle-fill";
-
-        t.innerHTML = `<i class="bi ${icone}"></i> <span>${msg}</span>`;
+        t.className = `alert alert-${tipo === "error" ? "danger" : "success"} d-flex align-items-center shadow-lg`;
+        t.innerHTML = `<i class="bi ${tipo === "error" ? "bi-exclamation-octagon-fill" : "bi-check-circle-fill"} fs-4 me-2"></i> <div><strong>${tipo === "error" ? "Atenção!" : "Sucesso!"}</strong><br><small>${msg}</small></div>`;
         c.appendChild(t);
-
-        setTimeout(() => t.classList.add("show"), 10);
-
-        setTimeout(() => {
-          t.classList.remove("show");
-          setTimeout(() => t.remove(), 400);
-        }, 5000);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transition = '0.5s'; setTimeout(() => t.remove(), 500); }, 4000);
       }
     </script>
   </body>
