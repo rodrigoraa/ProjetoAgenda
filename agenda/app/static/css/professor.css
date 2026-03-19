@@ -271,41 +271,70 @@ color: var(--accent);
 }
 /* --- AJUSTES PARA CELULAR (MOBILE) --- */
 @media (max-width: 768px) {
-  /* Oculta a barra lateral e deixa ela flutuante para aparecer quando chamada */
-  #sidebar {
-    position: fixed;
-    left: -300px; /* Escondida fora da tela */
-    top: 0;
-    bottom: 0;
-    transition: left 0.3s ease-in-out;
-    box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+  /* Transforma a tela em uma coluna (empilha o calendário e a agenda) */
+  body.d-flex {
+    flex-direction: column !important;
+    overflow-x: hidden;
   }
 
-  /* Classe ativada pelo JavaScript para mostrar o menu */
+  /* Oculta a barra lateral e deixa ela flutuante com z-index alto */
+  #sidebar {
+    position: fixed;
+    left: -320px; /* Escondida fora da tela */
+    top: 0;
+    bottom: 0;
+    z-index: 1050 !important; /* Fica acima de tudo, até do calendário */
+    transition: left 0.3s ease-in-out;
+    box-shadow: 4px 0 25px rgba(0,0,0,0.5);
+  }
+
   #sidebar.show-mobile {
     left: 0;
   }
 
-  /* Reduz o espaçamento geral da tela principal */
+  /* Reduz o espaçamento do calendário e ajusta a altura */
   #main-content {
+    padding: 15px !important;
+    height: auto !important; /* Permite rolar a tela naturalmente */
+    width: 100% !important;
+  }
+
+  /* Faz a agenda lateral ocupar 100% da tela e ir para debaixo do calendário */
+  #agenda-lateral {
+    width: 100% !important;
+    height: auto !important;
+    border-left: none !important;
+    border-top: 2px solid #e2e8f0;
     padding: 15px !important;
   }
 
-  /* Empilha os botões do calendário para não vazarem da tela */
+  /* Arruma o cabeçalho do FullCalendar para não espremer os botões */
   .fc .fc-toolbar {
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.25rem !important;
   }
 }
 
 /* Fundo escuro atrás do menu (Overlay) */
 #overlay-menu {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 9; /* Fica logo atrás da sidebar (z-index 10) */
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 1040; /* Logo atrás da Sidebar */
   display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
 }
+
 #overlay-menu.show-overlay {
   display: block;
+  opacity: 1;
 }
