@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from app.models import db, Recurso, HorarioAula, Turma, Agendamento
 from flask import (
     Blueprint,
     render_template,
@@ -52,6 +53,7 @@ def add_recurso():
 @admin_bp.route("/recurso/delete/<int:id>")
 def delete_recurso(id):
     recurso = Recurso.query.get_or_404(id)
+    Agendamento.query.filter_by(recurso_id=id).delete()
     db.session.delete(recurso)
     db.session.commit()
     # Retorno compatível com AJAX ou clique direto
@@ -119,6 +121,7 @@ def gerar_grade():
 @admin_bp.route("/horario/delete/<int:id>")
 def delete_horario(id):
     h = HorarioAula.query.get_or_404(id)
+    Agendamento.query.filter_by(horario_id=id).delete()
     db.session.delete(h)
     db.session.commit()
     return "", 204  # Retorno silencioso para o JavaScript remover o elemento
@@ -149,6 +152,7 @@ def gerar_sequencia():
 @admin_bp.route("/turma/delete/<int:id>")
 def delete_turma(id):
     turma = Turma.query.get_or_404(id)
+    Agendamento.query.filter_by(turma_id=id).delete()
     db.session.delete(turma)
     db.session.commit()
 
@@ -164,6 +168,7 @@ def delete_turma(id):
 @admin_bp.route("/turma/limpar_todas", methods=["POST"])
 def limpar_turmas():
     try:
+        Agendamento.query.delete()
         Turma.query.delete()
         db.session.commit()
         flash("Todas as turmas foram removidas.")

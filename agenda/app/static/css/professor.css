@@ -1,328 +1,209 @@
 :root {
---bg-body: #f1f5f9;
---sidebar-bg: #0f172a;
---sidebar-hover: #1e293b;
---accent: #3b82f6;
+    --bg-body: #f1f5f9;
+    --sidebar-bg: #0f172a;
+    --sidebar-hover: #1e293b;
+    --accent: #3b82f6;
 }
+
+/* Reset e Estrutura Principal */
+html, body {
+    height: 100%;
+    margin: 0;
+    background-color: var(--bg-body);
+    font-family: "Inter", sans-serif;
+}
+
 body {
-background-color: var(--bg-body);
-font-family: "Inter", sans-serif;
-color: #334155;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Sidebar Esquerda */
+/* Menu Superior */
 #sidebar {
-width: 280px;
-background: var(--sidebar-bg);
-color: #f8fafc;
-min-height: 100vh;
-z-index: 10;
+    width: 100%;
+    background: var(--sidebar-bg);
+    color: #f8fafc;
+    min-height: 65px;
+    z-index: 1000;
+    border-bottom: 1px solid #1e293b;
 }
+
 .nav-link {
-color: #94a3b8;
-border-radius: 10px;
-margin-bottom: 5px;
-padding: 12px 15px;
-transition: all 0.2s;
-}
-.nav-link:hover,
-.nav-link.active {
-background: var(--sidebar-hover);
-color: #fff;
-}
-.nav-link.active {
-border-left: 4px solid var(--accent);
+    color: #94a3b8;
+    border-radius: 8px;
+    padding: 8px 15px;
+    transition: all 0.2s;
 }
 
-/* Área Central */
+.nav-link:hover, .nav-link.active {
+    background: var(--sidebar-hover);
+    color: #fff !important;
+}
+
+.nav-link.active {
+    border-bottom: 3px solid var(--accent);
+    border-radius: 8px 8px 0 0;
+}
+
+/* NOVO LAYOUT FLEXÍVEL */
+.main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden; /* Mantém os scrolls independentes no PC */
+}
+
 #main-content {
-flex: 1;
-padding: 30px;
-overflow-y: auto;
-height: 100vh;
-}
-#calendar-container {
-background: white;
-padding: 25px;
-border-radius: 20px;
-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    flex: 1;
+    overflow-y: auto;
+    padding: 25px;
 }
 
-/* Agenda Direita */
 #agenda-lateral {
-width: 360px;
-background: white;
-border-left: 1px solid #e2e8f0;
-padding: 25px;
-overflow-y: auto;
-height: 100vh;
-box-shadow: -4px 0 15px rgba(0, 0, 0, 0.02);
-}
-.horario-card {
-border: 1px solid #e2e8f0;
-border-radius: 14px;
-padding: 18px;
-margin-bottom: 15px;
-background: white;
-transition: all 0.2s ease;
-}
-.horario-card:hover {
-transform: translateY(-3px);
-box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-}
-.horario-card.ocupado {
-border-left: 4px solid #ef4444;
-background: #fef2f2;
-border-color: #fca5a5;
-}
-.horario-card.livre {
-border-left: 4px solid #10b981;
+    width: 380px;
+    background: white;
+    border-left: 1px solid #e2e8f0;
+    padding: 25px;
+    overflow-y: auto;
 }
 
-/* Modais (Desfoque no fundo) */
-.modal-backdrop {
-backdrop-filter: blur(4px);
-background-color: rgba(15, 23, 42, 0.6);
+/* Elementos do Calendário e Cards */
+#calendar-container {
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
-.modal-content {
-border-radius: 20px;
-border: none;
-box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+.horario-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 15px;
+    margin-bottom: 12px;
+}
+.horario-card.ocupado { border-left: 4px solid #ef4444; background: #fef2f2; }
+.horario-card.livre { border-left: 4px solid #10b981; }
+
+/* === MOBILE (RESPONSIVIDADE) === */
+@media (max-width: 992px) {
+    .main-layout {
+        flex-direction: column; /* Agenda cai para baixo */
+        overflow-y: auto;
+    }
+
+    #main-content {
+        height: auto;
+        overflow-y: visible;
+        flex: none;
+    }
+
+    #agenda-lateral {
+        width: 100%;
+        height: auto;
+        border-left: none;
+        border-top: 2px solid #e2e8f0;
+        overflow-y: visible;
+    }
+
+    #sidebar {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px !important;
+    }
+
+    .nav {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+}
+/* =========================================
+   AJUSTES DE TAMANHO DO CALENDÁRIO
+   ========================================= */
+
+/* Achata os "quadradinhos" dos dias */
+.fc-daygrid-day-frame {
+    padding: 4px !important;
+    min-height: 45px !important; 
+}
+
+/* Reduz o tamanho da fonte do calendário para tudo caber melhor */
+.fc {
+    font-size: 0.85rem;
+}
+
+/* Diminui o espaço em branco no cabeçalho do calendário (onde ficam os dias da semana) */
+.fc-col-header-cell {
+    padding: 8px 0 !important;
 }
 
 /* =========================================
-    CUSTOMIZAÇÃO PREMIUM DO FULLCALENDAR
-    ========================================= */
+   SISTEMA DE AVISOS (TOASTS)
+   ========================================= */
 
-/* Fonte geral e remoção de bordas pesadas */
-.fc {
-font-family: "Inter", sans-serif;
-}
-
-.fc-theme-standard .fc-scrollgrid {
-border: none !important;
-}
-
-.fc-theme-standard td,
-.fc-theme-standard th {
-border-color: #e2e8f0 !important;
-}
-
-/* Cabeçalho dos dias da semana (Dom, Seg, Ter...) */
-.fc-col-header-cell {
-background-color: #f8fafc;
-padding: 15px 0 !important;
-border-bottom: 2px solid #e2e8f0 !important;
-border-top: none !important;
-border-left: none !important;
-border-right: none !important;
-}
-
-.fc-col-header-cell-cushion {
-color: #64748b;
-font-weight: 700;
-text-transform: uppercase;
-font-size: 0.85rem;
-letter-spacing: 0.5px;
-text-decoration: none !important;
-}
-
-/* Células dos dias (Os quadradinhos) */
-.fc-daygrid-day-frame {
-padding: 8px !important;
-min-height: 100px !important;
-}
-
-.fc-daygrid-day-number {
-color: #334155;
-font-weight: 600;
-font-size: 1rem;
-text-decoration: none !important;
-width: 32px;
-height: 32px;
-display: flex;
-align-items: center;
-justify-content: center;
-border-radius: 50%;
-transition: all 0.2s;
-margin: 5px;
-}
-
-/* Efeito ao passar o mouse no dia */
-.fc-daygrid-day:hover {
-background-color: #f8fafc;
-cursor: pointer;
-}
-.fc-daygrid-day:hover .fc-daygrid-day-number {
-background-color: var(--sidebar-bg); /* Fica escuro ao passar o mouse */
-color: white;
-}
-
-/* Destaque para o dia de HOJE */
-.fc-day-today {
-background-color: #eff6ff !important; /* Fundo azul bem clarinho */
-}
-.fc-day-today .fc-daygrid-day-number {
-background-color: var(--accent); /* Bolinha azul chamativa */
-color: white;
-box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
-}
-
-/* Título e Barra Superior do Calendário */
-.fc-toolbar-title {
-font-weight: 800 !important;
-font-size: 1.5rem !important;
-color: #0f172a;
-text-transform: capitalize;
-}
-
-/* Botões do Calendário (Hoje, <, >) */
-.fc-button-primary {
-background-color: white !important;
-border: 1px solid #e2e8f0 !important;
-color: #475569 !important;
-border-radius: 10px !important;
-font-weight: 600 !important;
-text-transform: capitalize !important;
-padding: 8px 16px !important;
-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
-transition: all 0.2s !important;
-}
-
-.fc-button-primary:hover {
-background-color: #f1f5f9 !important;
-color: #0f172a !important;
-}
-
-.fc-button-primary:not(:disabled):active,
-.fc-button-primary:not(:disabled).fc-button-active {
-background-color: var(--sidebar-bg) !important;
-border-color: var(--sidebar-bg) !important;
-color: white !important;
-}
-/* Destaca o dia clicado */
-.fc-day-ritmo-click {
-background-color: rgba(59, 130, 246, 0.1) !important;
-border: 2px solid var(--accent) !important;
-}
-
-/* Estilo para o Toast de Notificação */
+/* O container fica fixo bem no topo e no meio da tela */
 .toast-container {
-position: fixed;
-top: 20px;
-right: 20px;
-z-index: 9999;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
+/* Base da notificação */
 .custom-toast {
-background: white;
-padding: 15px 25px;
-border-radius: 10px;
-box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-display: flex;
-align-items: center;
-gap: 10px;
-border-left: 5px solid var(--accent);
-transform: translateX(120%);
-transition: transform 0.3s ease-in-out;
+    min-width: 320px;
+    background: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    
+    /* Prepara a animação de entrada (vem de cima) */
+    transform: translateY(-100px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Efeito "mola" */
 }
 
 .custom-toast.show {
-transform: translateX(0);
+    transform: translateY(0);
+    opacity: 1;
 }
+
+/* === ESTILO: SUCESSO (Verde) === */
 .custom-toast.success {
-border-left-color: #10b981;
+    border-left: 8px solid #10b981;
+    color: #064e3b;
 }
+.custom-toast.success i {
+    color: #10b981;
+    font-size: 1.8rem;
+}
+
+/* === ESTILO: ERRO (Vermelho Chamativo + Tremida) === */
 .custom-toast.error {
-border-left-color: #ef4444;
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-left: 8px solid #ef4444;
+    color: #991b1b;
+    animation: tremer 0.4s ease-in-out; /* Faz a janelinha tremer */
+}
+.custom-toast.error i {
+    color: #ef4444;
+    font-size: 1.8rem;
 }
 
-/* Mantém o calendário limpo */
-.fc-daygrid-event-harness {
-margin-top: 1px !important;
-}
-
-.fc-event {
-  border: none !important;
-  background-color: var(--accent) !important;
-  border-radius: 4px !important;
-  font-size: 0.7rem !important;
-  padding: 2px 4px !important;
-  text-align: center;
-}
-
-/* Esconde o excesso se houver muitos eventos (o "more" link) */
-.fc-daygrid-more-link {
-font-size: 0.7rem;
-font-weight: bold;
-color: var(--accent);
-}
-/* --- AJUSTES PARA CELULAR (MOBILE) --- */
-@media (max-width: 768px) {
-  /* Transforma a tela em uma coluna (empilha o calendário e a agenda) */
-  body.d-flex {
-    flex-direction: column !important;
-    overflow-x: hidden;
-  }
-
-  /* Oculta a barra lateral e deixa ela flutuante com z-index alto */
-  #sidebar {
-    position: fixed;
-    left: -320px; /* Escondida fora da tela */
-    top: 0;
-    bottom: 0;
-    z-index: 1050 !important; /* Fica acima de tudo, até do calendário */
-    transition: left 0.3s ease-in-out;
-    box-shadow: 4px 0 25px rgba(0,0,0,0.5);
-  }
-
-  #sidebar.show-mobile {
-    left: 0;
-  }
-
-  /* Reduz o espaçamento do calendário e ajusta a altura */
-  #main-content {
-    padding: 15px !important;
-    height: auto !important; /* Permite rolar a tela naturalmente */
-    width: 100% !important;
-  }
-
-  /* Faz a agenda lateral ocupar 100% da tela e ir para debaixo do calendário */
-  #agenda-lateral {
-    width: 100% !important;
-    height: auto !important;
-    border-left: none !important;
-    border-top: 2px solid #e2e8f0;
-    padding: 15px !important;
-  }
-
-  /* Arruma o cabeçalho do FullCalendar para não espremer os botões */
-  .fc .fc-toolbar {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .fc-toolbar-title {
-    font-size: 1.25rem !important;
-  }
-}
-
-/* Fundo escuro atrás do menu (Overlay) */
-#overlay-menu {
-  position: fixed;
-  top: 0; 
-  left: 0; 
-  right: 0; 
-  bottom: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(3px);
-  z-index: 1040; /* Logo atrás da Sidebar */
-  display: none;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-#overlay-menu.show-overlay {
-  display: block;
-  opacity: 1;
+/* Animação para chamar atenção no erro */
+@keyframes tremer {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-10px); }
+    80% { transform: translateX(10px); }
 }
