@@ -21,35 +21,32 @@ body {
 /* Menu Superior */
 #sidebar {
     width: 100%;
-    background: var(--sidebar-bg);
+    background: var(--sidebar-bg); /* Fundo azul escuro */
     color: #f8fafc;
-    min-height: 65px;
+    min-height: 70px;
     z-index: 1000;
     border-bottom: 1px solid #1e293b;
 }
 
-.nav-link {
+.nav-link.recurso-link {
     color: #94a3b8;
-    border-radius: 8px;
-    padding: 8px 15px;
-    transition: all 0.2s;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05); /* Leve destaque translúcido */
+    border: 1px solid transparent;
 }
 
-.nav-link:hover, .nav-link.active {
-    background: var(--sidebar-hover);
+.nav-link.recurso-link:hover, 
+.nav-link.recurso-link.active {
+    background: var(--accent); /* Azul brilhante */
     color: #fff !important;
+    border: 1px solid var(--accent);
 }
 
-.nav-link.active {
-    border-bottom: 3px solid var(--accent);
-    border-radius: 8px 8px 0 0;
-}
-
-/* NOVO LAYOUT FLEXÍVEL */
+/* Layout Flexível */
 .main-layout {
     display: flex;
     flex: 1;
-    overflow: hidden; /* Mantém os scrolls independentes no PC */
+    overflow: hidden; /* Mantém scrolls independentes no PC */
 }
 
 #main-content {
@@ -83,64 +80,19 @@ body {
 .horario-card.ocupado { border-left: 4px solid #ef4444; background: #fef2f2; }
 .horario-card.livre { border-left: 4px solid #10b981; }
 
-/* === MOBILE (RESPONSIVIDADE) === */
-@media (max-width: 992px) {
-    .main-layout {
-        flex-direction: column; /* Agenda cai para baixo */
-        overflow-y: auto;
-    }
-
-    #main-content {
-        height: auto;
-        overflow-y: visible;
-        flex: none;
-    }
-
-    #agenda-lateral {
-        width: 100%;
-        height: auto;
-        border-left: none;
-        border-top: 2px solid #e2e8f0;
-        overflow-y: visible;
-    }
-
-    #sidebar {
-        flex-direction: column;
-        gap: 10px;
-        padding: 15px !important;
-    }
-
-    .nav {
-        width: 100%;
-        overflow-x: auto;
-        padding-bottom: 8px;
-    }
-}
-/* =========================================
-   AJUSTES DE TAMANHO DO CALENDÁRIO
-   ========================================= */
-
-/* Achata os "quadradinhos" dos dias */
+/* Ajustes de Tamanho do Calendário */
 .fc-daygrid-day-frame {
     padding: 4px !important;
     min-height: 45px !important; 
 }
-
-/* Reduz o tamanho da fonte do calendário para tudo caber melhor */
 .fc {
     font-size: 0.85rem;
 }
-
-/* Diminui o espaço em branco no cabeçalho do calendário (onde ficam os dias da semana) */
 .fc-col-header-cell {
     padding: 8px 0 !important;
 }
 
-/* =========================================
-   SISTEMA DE AVISOS (TOASTS)
-   ========================================= */
-
-/* O container fica fixo bem no topo e no meio da tela */
+/* Sistema de Avisos (Toasts) */
 .toast-container {
     position: fixed;
     top: 20px;
@@ -151,8 +103,6 @@ body {
     flex-direction: column;
     gap: 15px;
 }
-
-/* Base da notificação */
 .custom-toast {
     min-width: 320px;
     background: white;
@@ -164,42 +114,25 @@ body {
     gap: 15px;
     font-weight: 600;
     font-size: 0.95rem;
-    
-    /* Prepara a animação de entrada (vem de cima) */
     transform: translateY(-100px);
     opacity: 0;
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Efeito "mola" */
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
-
 .custom-toast.show {
     transform: translateY(0);
     opacity: 1;
 }
-
-/* === ESTILO: SUCESSO (Verde) === */
-.custom-toast.success {
-    border-left: 8px solid #10b981;
-    color: #064e3b;
-}
-.custom-toast.success i {
-    color: #10b981;
-    font-size: 1.8rem;
-}
-
-/* === ESTILO: ERRO (Vermelho Chamativo + Tremida) === */
+.custom-toast.success { border-left: 8px solid #10b981; color: #064e3b; }
+.custom-toast.success i { color: #10b981; font-size: 1.8rem; }
 .custom-toast.error {
     background-color: #fef2f2;
     border: 1px solid #fca5a5;
     border-left: 8px solid #ef4444;
     color: #991b1b;
-    animation: tremer 0.4s ease-in-out; /* Faz a janelinha tremer */
+    animation: tremer 0.4s ease-in-out;
 }
-.custom-toast.error i {
-    color: #ef4444;
-    font-size: 1.8rem;
-}
+.custom-toast.error i { color: #ef4444; font-size: 1.8rem; }
 
-/* Animação para chamar atenção no erro */
 @keyframes tremer {
     0%, 100% { transform: translateX(0); }
     20% { transform: translateX(-10px); }
@@ -208,10 +141,47 @@ body {
     80% { transform: translateX(10px); }
 }
 
+/* =========================================
+   MOBILE (RESPONSIVIDADE UNIFICADA E CORRIGIDA)
+   ========================================= */
 @media (max-width: 992px) {
-    /* Deixa os recursos maiores e em formato de lista/bloco */
+    /* Ajuste da Barra Superior */
+    .nav-link.recurso-link {
+        padding: 10px 15px !important;
+        min-width: 50px; 
+    }
+    .nav-link.recurso-link i {
+        margin: 0 !important;
+        font-size: 1.3rem !important;
+    }
+
+    /* Ajuste do Layout da Tela */
+    .main-layout {
+        flex-direction: column; 
+        height: auto; 
+        overflow-y: visible;
+    }
+
+    #main-content {
+        height: 60vh; 
+        min-height: 450px; 
+        flex: none;
+        padding: 15px; /* Reduzi o padding no celular para dar mais espaço */
+    }
+
+    /* Ajuste da Aba de Horários */
+    #agenda-lateral {
+        width: 100%;
+        height: auto;
+        border-left: none;
+        border-top: 2px solid #e2e8f0;
+        overflow-y: visible;
+        flex: none;
+        padding: 15px;
+    }
+
+    /* Ajustes Gerais para itens do celular */
     .recurso-item, 
-    .fc-event, /* Caso use eventos arrastáveis */
     .badge-recurso { 
         display: block !important;
         width: 100% !important;
@@ -222,7 +192,4 @@ body {
         text-align: center;
         box-sizing: border-box;
     }
-
-    /* Oculta os recursos da tela principal se for usar só o Modal (Opcional) */
-    lista-recursos { display: none; }
 }

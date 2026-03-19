@@ -363,7 +363,8 @@
                     <label class="small fw-bold text-secondary mb-1">Nome de Identificação</label>
                     <input type="text" name="nome" class="form-control" placeholder="Ex: Laboratório de Informática 1" required />
                   </div>
-                  <div class="mb-4">
+                  
+                  <div class="mb-3">
                     <label class="small fw-bold text-secondary mb-1">Categoria</label>
                     <select name="tipo" class="form-select fw-medium">
                       <option value="Sala de Aula">Sala de Aula</option>
@@ -372,6 +373,21 @@
                       <option value="Quadra/Espaço">Quadra ou Espaço Aberto</option>
                     </select>
                   </div>
+
+                  <div class="mb-4">
+                    <label class="small fw-bold text-secondary mb-1">Ícone Visual (Para Celular)</label>
+                    <select name="icone" class="form-select fw-medium">
+                      <option value="bi-pc-display">💻 Laboratório / Computadores</option>
+                      <option value="bi-projector">📽️ Projetor / Multimídia</option>
+                      <option value="bi-speaker">🔊 Caixa de Som</option>
+                      <option value="bi-tv">📺 Televisão</option>
+                      <option value="bi-book">📚 Biblioteca / Leitura</option>
+                      <option value="bi-dpad">🎯 Quadra / Esportes</option>
+                      <option value="bi-door-open" selected>🚪 Sala de Aula Padrão</option>
+                      <option value="bi-box">📦 Outro Equipamento</option>
+                    </select>
+                  </div>
+
                   <button type="submit" class="btn" style="background-color: var(--adm-primary); color: white; font-weight: bold; padding: 10px; border-radius: 10px; width: 100%;">
                     Salvar Recurso
                   </button>

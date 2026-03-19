@@ -41,8 +41,9 @@ def dashboard():
 def add_recurso():
     nome = request.form.get("nome")
     tipo = request.form.get("tipo")
+    icone = request.form.get("icone", "bi-box") # Recebe o ícone (padrão é bi-box)
     if nome:
-        novo = Recurso(nome=nome, tipo=tipo)
+        novo = Recurso(nome=nome, tipo=tipo, icone=icone)
         db.session.add(novo)
         db.session.commit()
         flash("Recurso adicionado com sucesso!")

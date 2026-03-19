@@ -20,6 +20,7 @@ class Recurso(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     tipo = db.Column(db.String(50), nullable=False)
+    icone = db.Column(db.String(50), default="bi-box")
     status = db.Column(db.String(20), default="Ativo")
 
 
