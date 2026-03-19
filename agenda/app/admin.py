@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
-from app.models import db, Recurso, HorarioAula, Turma, Agendamento
+
+# Importei o Professor aqui em baixo
+from app.models import db, Recurso, HorarioAula, Turma, Agendamento, Professor
 from flask import (
     Blueprint,
     render_template,
@@ -9,6 +11,9 @@ from flask import (
     flash,
 )
 from flask_login import login_required, current_user
+
+# Importei o gerador de hash para a senha
+from werkzeug.security import generate_password_hash
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -29,9 +34,45 @@ def dashboard():
         HorarioAula.turno, HorarioAula.hora_inicio
     ).all()
     turmas = Turma.query.all()
+
+    # Busca todos os professores ordenados por nome para o Dropdown
+    professores = Professor.query.order_by(Professor.nome).all()
+
     return render_template(
-        "admin/dashboard.html", recursos=recursos, horarios=horarios, turmas=turmas
+        "admin/dashboard.html",
+        recursos=recursos,
+        horarios=horarios,
+        turmas=turmas,
+        professores=professores,  # Passando a variável para o HTML
     )
+
+
+# ==========================================================
+# ROTA DE SEGURANÇA: REDEFINIR SENHA
+# ==========================================================
+@admin_bp.route("/redefinir_senha", methods=["POST"])
+def redefinir_senha_professor():
+    professor_id = request.form.get("professor_id")
+    nova_senha = request.form.get("nova_senha")
+
+    professor = Professor.query.get(professor_id)
+
+    if professor and nova_senha:
+        try:
+            # Criptografa e atualiza a senha no banco de dados
+            professor.senha = generate_password_hash(nova_senha)
+            db.session.commit()
+            flash(
+                f"A senha do professor {professor.nome} foi redefinida com sucesso!",
+                "success",
+            )
+        except Exception as e:
+            db.session.rollback()
+            flash("Erro ao redefinir a senha no banco de dados.", "danger")
+    else:
+        flash("Dados inválidos ou professor não encontrado.", "warning")
+
+    return redirect(url_for("admin.dashboard"))
 
 
 # --- GERENCIAMENTO DE RECURSOS (SALAS/EQUIPAMENTOS) ---
@@ -41,12 +82,12 @@ def dashboard():
 def add_recurso():
     nome = request.form.get("nome")
     tipo = request.form.get("tipo")
-    icone = request.form.get("icone", "bi-box") # Recebe o ícone (padrão é bi-box)
+    icone = request.form.get("icone", "bi-box")  # Recebe o ícone (padrão é bi-box)
     if nome:
         novo = Recurso(nome=nome, tipo=tipo, icone=icone)
         db.session.add(novo)
         db.session.commit()
-        flash("Recurso adicionado com sucesso!")
+        flash("Recurso adicionado com sucesso!", "success")
     return redirect(url_for("admin.dashboard"))
 
 
@@ -95,7 +136,9 @@ def gerar_grade():
                 and intervalo_duracao > 0
             ):
                 corrente = corrente + timedelta(minutes=intervalo_duracao)
-                intervalo_duracao = 0  # Garante que o intervalo só seja aplicado uma vez
+                intervalo_duracao = (
+                    0  # Garante que o intervalo só seja aplicado uma vez
+                )
 
             h_inicio = corrente.time()
             proximo = corrente + timedelta(minutes=duracao)
@@ -111,7 +154,7 @@ def gerar_grade():
             corrente = proximo
 
         db.session.commit()
-        flash(f"Grade {turno_selecionado} gerada com intervalo!")
+        flash(f"Grade {turno_selecionado} gerada com intervalo!", "success")
     except Exception as e:
         db.session.rollback()
         flash("Erro ao gerar grade. Verifique os campos de horário.", "danger")
@@ -145,7 +188,7 @@ def gerar_sequencia():
         db.session.add(nova)
 
     db.session.commit()
-    flash(f"Sequência de turmas para o turno {turno} gerada!")
+    flash(f"Sequência de turmas para o turno {turno} gerada!", "success")
     return redirect(url_for("admin.dashboard"))
 
 
@@ -171,7 +214,7 @@ def limpar_turmas():
         Agendamento.query.delete()
         Turma.query.delete()
         db.session.commit()
-        flash("Todas as turmas foram removidas.")
+        flash("Todas as turmas foram removidas.", "success")
     except Exception as e:
         db.session.rollback()
         flash("Erro ao limpar turmas.", "danger")

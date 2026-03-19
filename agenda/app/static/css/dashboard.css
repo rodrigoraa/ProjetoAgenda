@@ -1,0 +1,94 @@
+:root {
+--adm-primary: #0f172a; /* Azul meia-noite premium */
+--adm-bg: #f8fafc; /* Fundo gelo bem suave */
+--adm-accent: #2563eb; /* Azul elétrico para destaques */
+}
+body {
+background-color: var(--adm-bg);
+font-family: "Inter", sans-serif;
+color: #334155;
+}
+/* Navbar Premium */
+.navbar {
+background-color: var(--adm-primary) !important;
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+padding: 15px 0;
+}
+/* Cartões flutuantes */
+.card {
+border: none;
+border-radius: 16px;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+transition: all 0.3s ease;
+background: #fff;
+}
+/* Estatísticas do Topo */
+.stat-icon {
+width: 54px;
+height: 54px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 14px;
+}
+/* Abas de Navegação Superiores */
+.nav-pills {
+background: white;
+padding: 10px;
+border-radius: 16px;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+}
+.nav-pills .nav-link {
+color: #64748b;
+font-weight: 600;
+padding: 12px 24px;
+border-radius: 12px;
+transition: all 0.2s;
+}
+.nav-pills .nav-link.active {
+background-color: var(--adm-accent);
+color: white;
+box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+.nav-pills .nav-link:hover:not(.active) {
+background-color: #f1f5f9;
+}
+/* Formulários Elevados */
+.form-control,
+.form-select {
+border-radius: 10px;
+padding: 10px 15px;
+border: 1px solid #e2e8f0;
+background-color: #f8fafc;
+font-size: 0.95rem;
+}
+.form-control:focus,
+.form-select:focus {
+border-color: var(--adm-accent);
+box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+background-color: #fff;
+}
+/* Listas e Itens */
+.list-group-item {
+border: 1px solid #f1f5f9;
+margin-bottom: 10px;
+border-radius: 12px !important;
+background: white;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+padding: 15px 20px;
+transition: all 0.2s;
+}
+.list-group-item:hover {
+transform: translateX(4px);
+border-color: #e2e8f0;
+}
+.turno-divider {
+background: #e2e8f0;
+padding: 6px 16px;
+border-radius: 8px;
+font-weight: 700;
+color: #475569;
+font-size: 0.75rem;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
