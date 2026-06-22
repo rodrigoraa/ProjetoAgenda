@@ -1,0 +1,6 @@
+# Configuração local e segredos
+.env
+
+# Artefatos Python
+__pycache__/
+*.pyc

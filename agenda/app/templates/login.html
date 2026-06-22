@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f4c81" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Agenda Escolar" />
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/logo_escola.png') }}" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='image/logo_escola.png') }}" />
+    <title>Agenda Escolar | Acesso</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/login.css') }}"
+    />
+  </head>
+  <body>
+    <main class="login-shell">
+      <section class="login-hero">
+        <span class="hero-badge">Agenda institucional</span>
+        <h1>Reservas EESJ.</h1>
+        <p>
+          Professores acessem com seu CPF.
+        </p>
+        <div class="hero-points">
+          <div><i class="bi bi-phone"></i><span>Facilidade na reserva de recursos</span></div>
+          <div><i class="bi bi-shield-check"></i><span>Controle administrativo</span></div>
+          <div><i class="bi bi-calendar2-check"></i><span>Agenda sem conflitos</span></div>
+        </div>
+      </section>
+
+      <section class="login-panel">
+        <div class="panel-brand">
+          <div class="brand-mark">
+            <img
+              src="{{ url_for('static', filename='image/logo_escola.png') }}"
+              alt="Logo da escola"
+              class="brand-logo"
+            />
+          </div>
+          <div>
+            <strong>Agenda Escolar</strong>
+            <span>Acesso institucional por CPF</span>
+          </div>
+        </div>
+
+        <div class="panel-copy">
+          <h2>Entrar no sistema</h2>
+          <p>
+            Informe seu CPF. Contas administrativas também devem informar
+            a senha.
+          </p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+            <div
+              class="alert alert-{{ 'danger' if category in ['danger', 'error'] else 'warning' if category == 'warning' else 'success' }} d-flex align-items-center gap-2"
+              role="alert"
+            >
+              <i class="bi bi-info-circle-fill"></i>
+              <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('main.login') }}" method="POST" class="login-form">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}" />
+          <div class="mb-3">
+            <label class="form-label" for="matricula">CPF</label>
+            <input
+              type="text"
+              class="form-control form-control-lg"
+              id="matricula"
+              name="matricula"
+              value="{{ matricula_input or '' }}"
+              placeholder="000.000.000-00"
+              required
+              autofocus
+              autocomplete="username"
+              style="text-transform: uppercase"
+            />
+          </div>
+
+          <div class="mb-3" id="senha-admin-wrap">
+            <label class="form-label" for="senha">Senha administrativa</label>
+            <input
+              type="password"
+              class="form-control form-control-lg"
+              id="senha"
+              name="senha"
+              placeholder="Preencha apenas se seu CPF for de administrador"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-100">
+            Acessar agenda
+          </button>
+        </form>
+
+        <div class="panel-footer">
+          <small>O cadastro de professores e recursos é feito apenas pelo administrador.</small>
+        </div>
+
+        <div class="login-assistance">
+          <div>
+            <i class="bi bi-person-badge"></i>
+            <span>Professor entra com seu CPF.</span>
+          </div>
+          <div>
+            <i class="bi bi-shield-lock"></i>
+            <span>Administrador informa CPF e senha.</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const matriculaInput = document.getElementById("matricula");
+
+      matriculaInput.addEventListener("input", () => {
+        if (/[A-Za-z]/.test(matriculaInput.value)) {
+          matriculaInput.value = matriculaInput.value.toUpperCase();
+          return;
+        }
+        const digits = matriculaInput.value.replace(/\D/g, "").slice(0, 11);
+        if (digits.length <= 3) matriculaInput.value = digits;
+        else if (digits.length <= 6) matriculaInput.value = `${digits.slice(0, 3)}.${digits.slice(3)}`;
+        else if (digits.length <= 9) {
+          matriculaInput.value = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+        } else {
+          matriculaInput.value = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+        }
+      });
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register('{{ url_for("static", filename="sw.js") }}', {
+            scope: "/static/",
+            updateViaCache: "none",
+          })
+          .catch(() => null);
+      }
+    </script>
+  </body>
+</html>

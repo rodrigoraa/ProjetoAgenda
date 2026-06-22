@@ -1,0 +1,1601 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f4c81" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Agenda Escolar" />
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/logo_escola.png') }}" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='image/logo_escola.png') }}" />
+    <title>Agenda Escolar | Professor</title>
+    <script>
+      (function () {
+        let tema = "dark";
+        try {
+          tema = localStorage.getItem("agendaTema") || tema;
+        } catch (error) {
+          tema = "dark";
+        }
+        document.documentElement.dataset.theme = tema === "light" ? "light" : "dark";
+      })();
+    </script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/professor.css') }}"
+    />
+  </head>
+  <body>
+    {% set insights = insights|default({
+      "dias": 30,
+      "total_reservas": 0,
+      "taxa_ocupacao": 0,
+      "professores_ativos": 0,
+      "turmas": 0,
+      "por_periodo": [],
+      "por_professor": [],
+      "por_recurso": [],
+      "por_turma": [],
+      "maior_total": 1
+    }) %}
+    <div class="app-shell">
+      <header class="app-topbar">
+        <div class="topbar-brand">
+          <div class="welcome-block">
+            <span class="welcome-kicker">{{ saudacao }}, {{ nome }}</span>
+            <p class="mobile-secondary">Matrícula {{ current_user.matricula }}</p>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button
+            type="button"
+            class="theme-toggle"
+            id="themeToggle"
+            onclick="alternarTema()"
+            aria-label="Alternar para modo claro"
+            title="Alternar tema"
+          >
+            <i class="bi bi-sun-fill" aria-hidden="true"></i>
+          </button>
+          {% if current_user.is_admin %}
+          <a href="{{ url_for('admin.dashboard') }}" class="btn action-btn action-btn-secondary">
+            <i class="bi bi-shield-lock me-1"></i>Área do administrador
+          </a>
+          {% endif %}
+          <form action="{{ url_for('main.logout') }}" method="POST" class="topbar-logout">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="icon-action" aria-label="Sair" title="Sair">
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+            </button>
+          </form>
+        </div>
+      </header>
+
+      <main class="screen-body">
+        <section class="view-panel is-active" id="view-hoje">
+          <div class="section-card compact-card today-reservations-card">
+            <div class="section-header">
+              <div>
+                <h2 id="agendaListTitle">Suas reservas de hoje</h2>
+                <p class="section-helper mobile-secondary">
+                  Aqui estão os recursos já reservados para a data selecionada.
+                </p>
+              </div>
+              <span class="section-date" id="agendaListDate">{{ data_hoje }}</span>
+            </div>
+
+            <div class="agenda-list agenda-turnos-grid">
+              {% if meus_agendamentos and meus_agendamentos|length > 0 %}
+              {% for turno_nome in ["Matutino", "Vespertino"] %}
+              {% set turno = namespace(total=0) %}
+              <section class="agenda-turno-column" aria-label="Agendamentos do turno {{ turno_nome }}">
+                <div class="agenda-turno-title">{{ turno_nome }}</div>
+                <div class="agenda-turno-list">
+                  {% for item in meus_agendamentos if item.turno == turno_nome %}
+                  {% set turno.total = turno.total + 1 %}
+                  <div class="schedule-card">
+                    <div class="schedule-top">
+                      <div>
+                        <span class="schedule-label">{{ item.horario }}</span>
+                        <span class="time-badge">{{ item.intervalo }}</span>
+                      </div>
+                      {% if item.pode_cancelar %}
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="cancelarReservaGrupo('{{ data_hoje_iso }}', '{{ item.horario_id }}', '{{ item.turma_id }}', '{{ item.professor_id }}')"
+                        title="Cancelar esta aula (todos os recursos)"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </button>
+                      {% endif %}
+                    </div>
+                    <h3>{{ item.recursos|join(', ') }}</h3>
+                    <div class="schedule-detail-grid">
+                      <div class="schedule-detail">
+                        <span class="meta-label">Turma</span>
+                        <strong>{{ item.turma }} · {{ item.professor }}</strong>
+                      </div>
+                      <div class="schedule-detail">
+                        <span class="meta-label">Status</span>
+                        <strong>{% if item.pode_cancelar %}Minha reserva{% else %}Reservado por {{ item.professor }}{% endif %}</strong>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                  {% if turno.total == 0 %}
+                  <div class="turno-empty">
+                    <i class="bi bi-calendar2"></i>
+                    <span>Sem agendamentos.</span>
+                  </div>
+                  {% endif %}
+                </div>
+              </section>
+              {% endfor %}
+              {% else %}
+              <div class="empty-state">
+                <i class="bi bi-calendar2-plus"></i>
+                <p>Nenhuma reserva registrada para hoje.</p>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="future-bookings">
+              <div class="future-bookings-head">
+                <h3>Agendamentos para próximas datas</h3>
+                <span>Próximos dias</span>
+              </div>
+              <div class="agenda-list future-agenda-list" id="futureAgendaList">
+                {% if futuros_agendamentos and futuros_agendamentos|length > 0 %}
+                {% for item in futuros_agendamentos %}
+                <div class="schedule-card future-schedule-card">
+                  <div class="schedule-top">
+                    <div>
+                      <span class="schedule-label">{{ item.data_formatada }}</span>
+                      <span class="time-badge">{{ item.horario }}<br />{{ item.intervalo }}</span>
+                    </div>
+                    {% if item.pode_cancelar %}
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      onclick="cancelarReservaGrupo('{{ item.data_iso }}', '{{ item.horario_id }}', '{{ item.turma_id }}', '{{ item.professor_id }}')"
+                      title="Cancelar esta aula (todos os recursos)"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                    {% endif %}
+                  </div>
+                  <h3>{{ item.recursos|join(', ') }}</h3>
+                  <div class="schedule-detail-grid">
+                    <div class="schedule-detail">
+                      <span class="meta-label">Turma</span>
+                      <strong>{{ item.turma }} · {{ item.professor }}</strong>
+                    </div>
+                    <div class="schedule-detail">
+                      <span class="meta-label">Data</span>
+                      <strong>{{ item.data_formatada }} · {{ item.turno }}</strong>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state future-empty">
+                  <i class="bi bi-calendar2-week"></i>
+                  <p>Nenhum agendamento futuro registrado.</p>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="section-card compact-card resource-picker-card">
+            <div class="section-header">
+              <div>
+                <h2>EE São José</h2>
+                <p class="section-helper mobile-secondary">
+                  Depois de escolher a sala/lab, selecione uma aula para alocar.
+                </p>
+              </div>
+            </div>
+
+            <div class="resource-strip" id="resourceStrip">
+              {% for r in recursos %}
+              <button
+                type="button"
+                class="resource-pill"
+                data-resource-id="{{ r.id }}"
+                data-resource-name="{{ r.nome }}"
+                data-resource-image="{% if r.imagem %}{{ url_for('static', filename=r.imagem) }}{% endif %}"
+              >
+                <i class="bi {{ r.icone|default('bi-door-open') }}"></i>
+                <span>{{ r.nome }}</span>
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+
+          <aside class="detail-calendar" aria-label="Calendário do mês">
+            <div class="detail-day-number" id="detailDayNumber">{{ dia_hoje }}</div>
+            <div class="detail-today-label" id="detailDayLabel">Hoje</div>
+            <div class="detail-month-row">
+              <strong id="miniCalendarMonth">{{ mes_ano_hoje }}</strong>
+              <span>
+                <button type="button" onclick="mudarMesCalendario(-1)" aria-label="Mês anterior">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+                <button type="button" onclick="mudarMesCalendario(1)" aria-label="Próximo mês">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </span>
+            </div>
+            <div class="mini-calendar" id="miniCalendar"></div>
+          </aside>
+
+          <div class="section-card grade-card grade-card-{{ grade_hoje|length }}" id="gradeCard" data-locked="1" hidden>
+            <div class="section-header grade-header">
+              <button
+                type="button"
+                class="grade-back-btn"
+                onclick="voltarTelaInicial()"
+                aria-label="Voltar para a tela inicial"
+                title="Voltar"
+              >
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+              </button>
+              <div>
+                <button
+                  type="button"
+                  class="grade-date-trigger"
+                  id="gradeTitle"
+                  onclick="alternarCalendarioDaGrade()"
+                  aria-expanded="false"
+                  aria-controls="miniCalendar"
+                >
+                  <span>{{ data_hoje_extenso }}</span>
+                  <small>{{ dia_semana_hoje }}</small>
+                </button>
+                <p class="section-helper mobile-secondary">
+                  A turma e o professor responsável aparecem em destaque dentro de cada aula.
+                </p>
+              </div>
+              <div class="turno-filter">
+                <label class="turno-filter-label" for="filtroTurno">Exibir turno</label>
+                <select id="filtroTurno" class="form-select" onchange="filtrarTurnos(this.value)" disabled>
+                  <option value="todos" selected>Todos</option>
+                  <option value="Matutino">Matutino</option>
+                  <option value="Vespertino">Vespertino</option>
+                  <option value="Noturno">Noturno</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="turnos-grid turnos-grid-{{ grade_hoje|length }}">
+              {% for bloco_turno in grade_hoje %}
+              <section class="turno-column" data-turno="{{ bloco_turno.turno }}">
+                <div class="turno-title">{{ bloco_turno.turno }}</div>
+                <div class="aulas-lista">
+                  {% for aula in bloco_turno.aulas %}
+                  <article
+                    class="aula-card aula-clickable"
+                    role="button"
+                    tabindex="0"
+                    data-turno="{{ bloco_turno.turno }}"
+                    data-horario-id="{{ aula.id }}"
+                    data-horario-texto="{{ aula.descricao }} - {{ aula.intervalo }}"
+                  >
+                    <div class="aula-topo">
+                      <strong><i class="bi bi-clock"></i>{{ aula.descricao }}</strong>
+                      <span class="aula-time">{{ aula.intervalo }}</span>
+                    </div>
+
+                    <div class="aula-status" data-horario-id="{{ aula.id }}">
+                      <div class="aula-free">
+                        <i class="bi bi-plus-circle"></i>
+                        <span>Selecione uma sala/lab para ver a disponibilidade.</span>
+                      </div>
+                    </div>
+                  </article>
+                  {% endfor %}
+                </div>
+              </section>
+              {% endfor %}
+            </div>
+          </div>
+        </section>
+
+        <section class="view-panel" id="view-insights">
+          <div class="insights-head">
+            <div>
+              <h2>Estatísticas</h2>
+              <p class="section-helper">Resumo dos últimos {{ insights.dias }} dias de agendamentos.</p>
+            </div>
+            <span class="insights-period">{{ insights.dias }} dias</span>
+          </div>
+
+          <div class="insight-cards">
+            <article class="insight-card">
+              <i class="bi bi-bookmark-fill insight-orange"></i>
+              <strong>{{ insights.total_reservas }}</strong>
+              <span>Total de Reservas</span>
+            </article>
+            <article class="insight-card">
+              <i class="bi bi-pie-chart-fill insight-blue"></i>
+              <strong>{{ "%.1f"|format(insights.taxa_ocupacao) }}%</strong>
+              <span>Taxa de Ocupação</span>
+            </article>
+            <article class="insight-card">
+              <i class="bi bi-people-fill insight-purple"></i>
+              <strong>{{ insights.professores_ativos }}</strong>
+              <span>Professores Ativos</span>
+            </article>
+            <article class="insight-card">
+              <i class="bi bi-mortarboard-fill insight-orange"></i>
+              <strong>{{ insights.turmas }}</strong>
+              <span>Turmas</span>
+            </article>
+          </div>
+
+          <div class="insight-panels">
+            <section class="insight-panel">
+              <h3>Por Período</h3>
+              {% for item in insights.por_periodo %}
+              {% set percentual = ((item.total / insights.maior_total) * 100)|round(0, 'floor') %}
+              <div class="insight-row">
+                <span>{{ item.nome }}</span>
+                <div class="insight-bar"><i style="width: {{ percentual }}%;"></i></div>
+                <strong>{{ item.total }}</strong>
+              </div>
+              {% else %}
+              <p class="insight-empty">Sem reservas no período.</p>
+              {% endfor %}
+            </section>
+
+            <section class="insight-panel">
+              <h3>Por Professor</h3>
+              {% for item in insights.por_professor %}
+              {% set percentual = ((item.total / insights.maior_total) * 100)|round(0, 'floor') %}
+              <div class="insight-row">
+                <span>{{ item.nome }}</span>
+                <div class="insight-bar"><i style="width: {{ percentual }}%;"></i></div>
+                <strong>{{ item.total }}</strong>
+              </div>
+              {% else %}
+              <p class="insight-empty">Sem professores ativos no período.</p>
+              {% endfor %}
+            </section>
+
+            <section class="insight-panel">
+              <h3>Por Recurso</h3>
+              {% for item in insights.por_recurso %}
+              {% set percentual = ((item.total / insights.maior_total) * 100)|round(0, 'floor') %}
+              <div class="insight-row">
+                <span>{{ item.nome }}</span>
+                <div class="insight-bar"><i style="width: {{ percentual }}%;"></i></div>
+                <strong>{{ item.total }}</strong>
+              </div>
+              {% else %}
+              <p class="insight-empty">Sem recursos reservados no período.</p>
+              {% endfor %}
+            </section>
+
+            <section class="insight-panel">
+              <h3>Por Turma</h3>
+              {% for item in insights.por_turma %}
+              {% set percentual = ((item.total / insights.maior_total) * 100)|round(0, 'floor') %}
+              <div class="insight-row">
+                <span>{{ item.nome }}</span>
+                <div class="insight-bar"><i style="width: {{ percentual }}%;"></i></div>
+                <strong>{{ item.total }}</strong>
+              </div>
+              {% else %}
+              <p class="insight-empty">Sem turmas no período.</p>
+              {% endfor %}
+            </section>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <button type="button" class="nav-btn is-active" id="navHoje" onclick="voltarTelaInicial()">
+          <i class="bi bi-house-door"></i>
+          <span>Hoje</span>
+        </button>
+        <button type="button" class="nav-btn" id="navInsights" onclick="mostrarTela('insights')">
+          <i class="bi bi-graph-up"></i>
+          <span>Insights</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="modal fade" id="modalAgendamento" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-header modal-header-custom border-0">
+            <div>
+              <h5 class="modal-title fw-bold mb-0">Planejar uso do recurso</h5>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <form id="formReserva">
+              <div class="modal-progress">
+                <span class="is-done">Recurso</span>
+                <span class="is-done">Horário</span>
+                <span>Turma</span>
+              </div>
+              <div class="modal-context" id="modalContext">
+                <i class="bi bi-info-circle"></i>
+                <span>Complete os campos para confirmar a reserva.</span>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Data selecionada</label>
+                <input type="date" class="form-control form-control-lg" id="modalData" readonly />
+              </div>
+
+              {% if current_user.is_admin %}
+              <div class="mb-3">
+                <label class="form-label">Professor responsável</label>
+                <select id="modalProfessor" class="form-select form-select-lg" required>
+                  <option value="" selected disabled>Escolha o professor...</option>
+                  {% for professor in professores %}
+                  <option value="{{ professor.id }}">{{ professor.nome }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              {% endif %}
+
+              <div class="mb-3">
+                <label class="form-label" id="modalRecursoLabel">1. Recurso ou sala</label>
+                <select id="modalRecurso" class="form-select form-select-lg" required>
+                  <option value="" selected disabled>Selecione um recurso...</option>
+                  {% for r in recursos %}
+                  <option value="{{ r.id }}" data-recurso-option="1">{{ r.nome }}</option>
+                  {% endfor %}
+                </select>
+                <div id="modalRecursoChecklist" class="resource-checklist" style="display: none;"></div>
+                <small class="text-muted d-block mt-1" id="modalRecursoHint" style="display: none;">
+                  Dica: selecione a sala/lab e mais um recurso extra (ex: projetor, som, TV).
+                </small>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">2. Turno</label>
+                <select id="modalTurno" class="form-select form-select-lg" required disabled>
+                  <option value="" selected disabled>Selecione o recurso primeiro...</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">3. Horário</label>
+                <select id="modalHorario" class="form-select form-select-lg" required disabled>
+                  <option value="" selected disabled>Selecione o turno primeiro...</option>
+                </select>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label">4. Turma</label>
+                <select id="modalTurma" class="form-select form-select-lg" required disabled>
+                  <option value="" selected disabled>Selecione o horário primeiro...</option>
+                </select>
+              </div>
+
+              <div class="d-grid">
+                <button
+                  type="button"
+                  id="btnConfirmar"
+                  class="btn btn-primary btn-lg"
+                  onclick="confirmarReserva()"
+                  disabled
+                >
+                  Confirmar reserva
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const csrfToken = "{{ csrf_token() }}";
+      const nativeFetch = window.fetch.bind(window);
+      window.fetch = (input, init = {}) => {
+        const method = (init.method || "GET").toUpperCase();
+        if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+          const headers = new Headers(init.headers || {});
+          headers.set("X-CSRFToken", csrfToken);
+          init.headers = headers;
+        }
+        return nativeFetch(input, init);
+      };
+
+      let horariosDaSala = [];
+      let recursoSelecionado = null;
+      let contextoAulaSelecionada = null;
+      let recursosPadraoModal = [];
+      let selecaoRecursosAnterior = new Set();
+      let miniCalendarDate = new Date("{{ data_hoje_iso }}T00:00:00");
+      const hojeIso = "{{ data_hoje_iso }}";
+      let dataSelecionadaIso = hojeIso;
+      const mesesCalendario = [
+        "Janeiro",
+        "Fevereiro",
+        "Março",
+        "Abril",
+        "Maio",
+        "Junho",
+        "Julho",
+        "Agosto",
+        "Setembro",
+        "Outubro",
+        "Novembro",
+        "Dezembro",
+      ];
+      const diasSemanaCalendario = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+      const diasSemanaExtenso = [
+        "domingo",
+        "segunda-feira",
+        "terça-feira",
+        "quarta-feira",
+        "quinta-feira",
+        "sexta-feira",
+        "sábado",
+      ];
+
+      document.addEventListener("DOMContentLoaded", function () {
+        atualizarBotaoTema();
+
+        recursosPadraoModal = Array.from(
+          document.querySelectorAll("#modalRecurso option[data-recurso-option='1']"),
+        ).map((option) => ({
+          id: option.value,
+          nome: option.textContent,
+        }));
+
+        document.querySelectorAll(".resource-pill").forEach((button) => {
+          button.addEventListener("click", function () {
+            selecionarRecurso(this.dataset.resourceId, this.dataset.resourceName, this);
+          });
+        });
+
+        document.querySelectorAll(".aula-clickable").forEach((card) => {
+          card.addEventListener("click", function () {
+            abrirReservaNoHorario(
+              this.dataset.turno,
+              this.dataset.horarioId,
+              this.dataset.horarioTexto,
+            );
+          });
+
+          card.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              abrirReservaNoHorario(
+                this.dataset.turno,
+                this.dataset.horarioId,
+                this.dataset.horarioTexto,
+              );
+            }
+          });
+        });
+
+        renderizarCalendarioLateral();
+        mostrarTela("hoje");
+      });
+
+      function temaAtual() {
+        return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+      }
+
+      function atualizarBotaoTema() {
+        const button = document.getElementById("themeToggle");
+        if (!button) return;
+
+        const claro = temaAtual() === "light";
+        button.setAttribute("aria-label", claro ? "Alternar para modo escuro" : "Alternar para modo claro");
+        button.title = claro ? "Modo escuro" : "Modo claro";
+        button.innerHTML = `<i class="bi ${claro ? "bi-moon-stars-fill" : "bi-sun-fill"}" aria-hidden="true"></i>`;
+      }
+
+      function alternarTema() {
+        const proximoTema = temaAtual() === "light" ? "dark" : "light";
+        document.documentElement.dataset.theme = proximoTema;
+        try {
+          localStorage.setItem("agendaTema", proximoTema);
+        } catch (error) {
+          // A interface ainda alterna mesmo se o navegador bloquear armazenamento local.
+        }
+        atualizarBotaoTema();
+      }
+
+      function mostrarTela(tela) {
+        const viewHoje = document.getElementById("view-hoje");
+        const viewInsights = document.getElementById("view-insights");
+        const navHoje = document.getElementById("navHoje");
+        const navInsights = document.getElementById("navInsights");
+
+        const hojeAtiva = tela !== "insights";
+        const insightsAtivo = tela === "insights";
+        viewHoje.classList.toggle("is-active", hojeAtiva);
+        viewInsights.classList.toggle("is-active", insightsAtivo);
+        navHoje.classList.toggle("is-active", hojeAtiva);
+        navInsights.classList.toggle("is-active", insightsAtivo);
+      }
+
+      function focarRecursos() {
+        mostrarTela("hoje");
+        document.getElementById("resourceStrip")?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+
+      function focarGrade() {
+        const gradeCard = document.getElementById("gradeCard");
+        if (!gradeCard || gradeCard.hidden) return;
+        gradeCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function formatarIsoLocal(data) {
+        const ano = data.getFullYear();
+        const mes = String(data.getMonth() + 1).padStart(2, "0");
+        const dia = String(data.getDate()).padStart(2, "0");
+        return `${ano}-${mes}-${dia}`;
+      }
+
+      function criarDataLocal(dataStr) {
+        const [ano, mes, dia] = dataStr.split("-").map(Number);
+        return new Date(ano, mes - 1, dia);
+      }
+
+      function formatarDataCurta(dataStr) {
+        const data = criarDataLocal(dataStr);
+        return data.toLocaleDateString("pt-BR");
+      }
+
+      function formatarDataExtenso(dataStr) {
+        const data = criarDataLocal(dataStr);
+        const mes = mesesCalendario[data.getMonth()].toLowerCase();
+        return `${data.getDate()} de ${mes}`;
+      }
+
+      function obterDiaSemanaExtenso(dataStr) {
+        return diasSemanaExtenso[criarDataLocal(dataStr).getDay()];
+      }
+
+      function renderizarCalendarioLateral() {
+        const calendario = document.getElementById("miniCalendar");
+        const titulo = document.getElementById("miniCalendarMonth");
+        if (!calendario || !titulo) return;
+
+        const ano = miniCalendarDate.getFullYear();
+        const mes = miniCalendarDate.getMonth();
+        titulo.textContent = `${mesesCalendario[mes]} de ${ano}`;
+        calendario.innerHTML = "";
+
+        diasSemanaCalendario.forEach((dia) => {
+          const label = document.createElement("span");
+          label.className = "mini-calendar-weekday";
+          label.textContent = dia;
+          calendario.appendChild(label);
+        });
+
+        const primeiroDia = new Date(ano, mes, 1);
+        const inicioGrade = new Date(ano, mes, 1 - primeiroDia.getDay());
+
+        for (let i = 0; i < 42; i += 1) {
+          const data = new Date(inicioGrade);
+          data.setDate(inicioGrade.getDate() + i);
+          const iso = formatarIsoLocal(data);
+          const botao = document.createElement("button");
+          botao.type = "button";
+          botao.textContent = data.getDate();
+          botao.dataset.date = iso;
+          botao.className = [
+            data.getMonth() !== mes ? "is-muted" : "",
+            iso === hojeIso ? "is-today" : "",
+            iso === dataSelecionadaIso ? "is-selected" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+          botao.addEventListener("click", () => escolherDataCalendario(iso, botao));
+          calendario.appendChild(botao);
+        }
+      }
+
+      function mudarMesCalendario(delta) {
+        miniCalendarDate = new Date(
+          miniCalendarDate.getFullYear(),
+          miniCalendarDate.getMonth() + delta,
+          1,
+        );
+        renderizarCalendarioLateral();
+      }
+
+      function escolherDataCalendario(dataStr, botao) {
+        dataSelecionadaIso = dataStr;
+        document
+          .querySelectorAll("#miniCalendar button")
+          .forEach((item) => item.classList.remove("is-selected"));
+        if (botao) botao.classList.add("is-selected");
+        fecharCalendarioDaGrade();
+        atualizarInterfaceDataSelecionada();
+        mostrarTela("hoje");
+        if (recursoSelecionado) {
+          atualizarGradeParaRecurso();
+          focarGrade();
+        } else {
+          focarRecursos();
+        }
+      }
+
+      function alternarCalendarioDaGrade() {
+        if (!window.matchMedia("(max-width: 760px)").matches) {
+          focarCalendarioLateral();
+          return;
+        }
+
+        const calendario = document.querySelector(".detail-calendar");
+        const gatilho = document.getElementById("gradeTitle");
+        if (!calendario || !gatilho) return;
+
+        const aberto = calendario.classList.toggle("is-mobile-open");
+        gatilho.setAttribute("aria-expanded", aberto ? "true" : "false");
+        if (aberto) {
+          calendario.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      }
+
+      function fecharCalendarioDaGrade() {
+        const calendario = document.querySelector(".detail-calendar");
+        const gatilho = document.getElementById("gradeTitle");
+        if (calendario) calendario.classList.remove("is-mobile-open");
+        if (gatilho) gatilho.setAttribute("aria-expanded", "false");
+      }
+
+      function atualizarInterfaceDataSelecionada() {
+        const data = criarDataLocal(dataSelecionadaIso);
+        const detalheDia = document.getElementById("detailDayNumber");
+        const detalheLabel = document.getElementById("detailDayLabel");
+        const agendaTitle = document.getElementById("agendaListTitle");
+        const agendaDate = document.getElementById("agendaListDate");
+        const gradeTitle = document.getElementById("gradeTitle");
+        const labelData =
+          dataSelecionadaIso === hojeIso ? "Hoje" : obterDiaSemanaExtenso(dataSelecionadaIso);
+
+        if (detalheDia) detalheDia.textContent = data.getDate();
+        if (detalheLabel) detalheLabel.textContent = labelData;
+        if (agendaTitle) {
+          agendaTitle.textContent =
+            dataSelecionadaIso === hojeIso
+              ? "Suas reservas de hoje"
+              : `Reservas de ${formatarDataExtenso(dataSelecionadaIso)}`;
+        }
+        if (agendaDate) agendaDate.textContent = formatarDataCurta(dataSelecionadaIso);
+        if (gradeTitle) {
+          gradeTitle.innerHTML = `<span>${formatarDataExtenso(dataSelecionadaIso)}</span><small>${obterDiaSemanaExtenso(dataSelecionadaIso)}</small>`;
+        }
+
+        carregarAgendamentosDaData();
+      }
+
+      function carregarAgendamentosDaData() {
+        const lista = document.querySelector(".today-reservations-card > .agenda-list");
+        if (!lista) return;
+
+        fetch(`/api/agendamentos/dia/${dataSelecionadaIso}`)
+          .then((res) => res.json())
+          .then((agendamentos) => {
+            if (!agendamentos.length) {
+              lista.innerHTML = `
+                <div class="empty-state">
+                  <i class="bi bi-calendar2-plus"></i>
+                  <p>Nenhuma reserva registrada para esta data.</p>
+                </div>`;
+              return;
+            }
+
+            lista.innerHTML = renderizarAgendamentosPorTurno(agendamentos);
+          });
+      }
+
+      function renderizarAgendamentosPorTurno(agendamentos) {
+        const turnos = ["Matutino", "Vespertino"];
+
+        return turnos
+          .map((turno) => {
+            const itensDoTurno = agendamentos.filter((item) => item.turno === turno);
+            const cards = itensDoTurno.length
+              ? itensDoTurno.map((item) => renderizarCardAgendamentoDoDia(item)).join("")
+              : `
+                <div class="turno-empty">
+                  <i class="bi bi-calendar2"></i>
+                  <span>Sem agendamentos.</span>
+                </div>`;
+
+            return `
+              <section class="agenda-turno-column" aria-label="Agendamentos do turno ${turno}">
+                <div class="agenda-turno-title">${turno}</div>
+                <div class="agenda-turno-list">${cards}</div>
+              </section>`;
+          })
+          .join("");
+      }
+
+      function renderizarCardAgendamentoDoDia(item) {
+        const professor = escaparHtml(item.professor || "Professor");
+        const turma = escaparHtml(item.turma || "Turma");
+        const recursos = escaparHtml((item.recursos || []).join(", "));
+        const status = item.pode_cancelar ? "Minha reserva" : `Reservado por ${professor}`;
+        const cancelamento =
+          item.pode_cancelar && item.horario_id && item.turma_id
+            ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="cancelarReservaGrupo('${dataSelecionadaIso}', '${item.horario_id}', '${item.turma_id}', '${item.professor_id || ""}')" title="Cancelar esta aula (todos os recursos)"><i class="bi bi-trash"></i></button>`
+            : "";
+
+        return `
+          <div class="schedule-card">
+            <div class="schedule-top">
+              <div>
+                <span class="schedule-label">${escaparHtml(item.horario || "")}</span>
+                <span class="time-badge">${escaparHtml(item.intervalo || "")}</span>
+              </div>
+              ${cancelamento}
+            </div>
+            <h3>${recursos}</h3>
+            <div class="schedule-detail-grid">
+              <div class="schedule-detail">
+                <span class="meta-label">Turma</span>
+                <strong>${turma} · ${professor}</strong>
+              </div>
+              <div class="schedule-detail">
+                <span class="meta-label">Status</span>
+                <strong>${status}</strong>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      function renderizarCardAgendamento(item, dataCancelamento) {
+        const professor = escaparHtml(item.professor || "Professor");
+        const turma = escaparHtml(item.turma || "Turma");
+        const recursos = escaparHtml((item.recursos || []).join(", "));
+        const dataLabel = escaparHtml(item.data_formatada || formatarDataCurta(dataCancelamento));
+        const status = item.pode_cancelar ? "Minha reserva" : `Reservado por ${professor}`;
+        const cancelamento =
+          item.pode_cancelar && item.horario_id && item.turma_id
+            ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="cancelarReservaGrupo('${dataCancelamento}', '${item.horario_id}', '${item.turma_id}', '${item.professor_id || ""}')" title="Cancelar esta aula (todos os recursos)"><i class="bi bi-trash"></i></button>`
+            : "";
+
+        return `
+          <div class="schedule-card future-schedule-card">
+            <div class="schedule-top">
+              <div>
+                <span class="schedule-label">${dataLabel}</span>
+                <span class="time-badge">${escaparHtml(item.horario || "")}<br />${escaparHtml(item.intervalo || "")}</span>
+              </div>
+              ${cancelamento}
+            </div>
+            <h3>${recursos}</h3>
+            <div class="schedule-detail-grid">
+              <div class="schedule-detail">
+                <span class="meta-label">Turma</span>
+                <strong>${turma} · ${professor}</strong>
+              </div>
+              <div class="schedule-detail">
+                <span class="meta-label">Status</span>
+                <strong>${status}</strong>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      function carregarFuturosAgendamentos() {
+        const lista = document.getElementById("futureAgendaList");
+        if (!lista) return;
+
+        fetch("/api/agendamentos/futuros")
+          .then((res) => res.json())
+          .then((agendamentos) => {
+            if (!agendamentos.length) {
+              lista.innerHTML = `
+                <div class="empty-state future-empty">
+                  <i class="bi bi-calendar2-week"></i>
+                  <p>Nenhum agendamento futuro registrado.</p>
+                </div>`;
+              return;
+            }
+
+            lista.innerHTML = agendamentos
+              .map((item) => renderizarCardAgendamento(item, item.data_iso))
+              .join("");
+          });
+      }
+
+      function focarCalendarioLateral() {
+        mostrarTela("hoje");
+        const calendario = document.querySelector(".detail-calendar");
+        if (!calendario) return;
+        calendario.scrollIntoView({ behavior: "smooth", block: "center" });
+        calendario.classList.add("is-highlighted");
+        setTimeout(() => calendario.classList.remove("is-highlighted"), 900);
+      }
+
+      function voltarTelaInicial() {
+        const viewHoje = document.getElementById("view-hoje");
+        const gradeCard = document.getElementById("gradeCard");
+        const filtroTurno = document.getElementById("filtroTurno");
+
+        recursoSelecionado = null;
+        contextoAulaSelecionada = null;
+        document
+          .querySelectorAll(".resource-pill")
+          .forEach((item) => item.classList.remove("is-selected"));
+
+        if (viewHoje) viewHoje.classList.remove("has-grade");
+        if (gradeCard) {
+          gradeCard.dataset.locked = "1";
+          gradeCard.hidden = true;
+          aplicarFotoDoRecurso("");
+        }
+        if (filtroTurno) {
+          filtroTurno.value = "todos";
+          filtroTurno.disabled = true;
+          filtrarTurnos("todos");
+        }
+
+        document.querySelectorAll(".aula-card").forEach((card) => {
+          card.classList.remove("is-free", "is-busy");
+        });
+        document.querySelectorAll(".aula-status").forEach((wrap) => {
+          wrap.innerHTML = `
+            <div class="aula-free">
+              <i class="bi bi-plus-circle"></i>
+              <span>Selecione uma sala/lab para ver a disponibilidade.</span>
+            </div>`;
+        });
+
+        mostrarTela("hoje");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function aplicarFotoDoRecurso(imageUrl) {
+        const gradeCard = document.getElementById("gradeCard");
+        if (!gradeCard) return;
+
+        if (imageUrl) {
+          gradeCard.style.setProperty("--resource-photo", `url("${imageUrl}")`);
+          gradeCard.classList.add("has-resource-photo");
+        } else {
+          gradeCard.style.removeProperty("--resource-photo");
+          gradeCard.classList.remove("has-resource-photo");
+        }
+      }
+
+      function selecionarRecurso(id, nome, element) {
+        const imageUrl = element?.dataset.resourceImage || "";
+        recursoSelecionado = { id: String(id), nome, imageUrl };
+        document
+          .querySelectorAll(".resource-pill")
+          .forEach((item) => item.classList.remove("is-selected"));
+        element.classList.add("is-selected");
+        const gradeTitle = document.getElementById("gradeTitle");
+        const gradeCard = document.getElementById("gradeCard");
+        const viewHoje = document.getElementById("view-hoje");
+        const filtroTurno = document.getElementById("filtroTurno");
+
+        if (gradeTitle) {
+          gradeTitle.innerHTML = `<span>${formatarDataExtenso(dataSelecionadaIso)}</span><small>${obterDiaSemanaExtenso(dataSelecionadaIso)}</small>`;
+        }
+
+        if (gradeCard) {
+          gradeCard.dataset.locked = "0";
+          gradeCard.hidden = false;
+          aplicarFotoDoRecurso(imageUrl);
+        }
+
+        if (viewHoje) {
+          viewHoje.classList.add("has-grade");
+        }
+
+        if (filtroTurno) {
+          filtroTurno.disabled = false;
+        }
+
+        atualizarGradeParaRecurso();
+        mostrarTela("hoje");
+      }
+
+      function atualizarGradeParaRecurso() {
+        const gradeCard = document.getElementById("gradeCard");
+        if (!gradeCard || !recursoSelecionado) return;
+
+        const data = dataSelecionadaIso;
+        const salaId = String(recursoSelecionado.id);
+
+        fetch(`/api/horarios/${salaId}/${data}`)
+          .then((res) => res.json())
+          .then((horarios) => {
+            const porHorario = new Map(horarios.map((h) => [String(h.id), h]));
+
+            document.querySelectorAll(".aula-status").forEach((wrap) => {
+              const horarioId = String(wrap.dataset.horarioId || "");
+              const info = porHorario.get(horarioId);
+
+              if (!info) {
+                wrap.closest(".aula-card")?.classList.remove("is-free", "is-busy");
+                wrap.innerHTML = `<div class="aula-free"><i class="bi bi-question-circle"></i><span>Disponibilidade indisponível</span></div>`;
+                return;
+              }
+
+              if (!info.ocupado_por) {
+                wrap.closest(".aula-card")?.classList.remove("is-busy");
+                wrap.closest(".aula-card")?.classList.add("is-free");
+                wrap.innerHTML = `<div class="aula-free"><i class="bi bi-plus-circle"></i><span>Livre para reservar</span></div>`;
+                return;
+              }
+
+              wrap.closest(".aula-card")?.classList.remove("is-free");
+              wrap.closest(".aula-card")?.classList.add("is-busy");
+
+              const professor = escaparHtml(info.ocupado_por || "Professor");
+              const btnCancelar =
+                info.pode_cancelar && info.reserva_id
+                  ? `<button class="btn btn-sm btn-outline-danger reserva-action" type="button" data-reserva-id="${info.reserva_id}" onclick="cancelarReservaDoCard(event, this)"><i class="bi bi-trash"></i></button>`
+                  : "";
+
+              wrap.innerHTML = `
+                <div class="reserva-item reserva-item-compacta">
+                  <div class="reserva-copy">
+                    <span class="reserva-mini">Aula alocada por: <strong>${professor}</strong></span>
+                  </div>
+                  ${btnCancelar}
+                </div>`;
+            });
+          });
+      }
+
+      function abrirModalComData(dataStr) {
+        document.getElementById("modalData").value = dataStr;
+        const professorSelect = document.getElementById("modalProfessor");
+        if (professorSelect) professorSelect.value = "";
+        atualizarContextoModal();
+        configurarModoSelecaoDeRecursos();
+        preencherOpcoesDeRecurso();
+        resetarCamposAbaixo("recurso");
+        new bootstrap.Modal(document.getElementById("modalAgendamento")).show();
+
+        if (contextoAulaSelecionada) {
+          configurarHorarioFixoDaAula();
+          const salaId = recursoSelecionado ? String(recursoSelecionado.id) : "";
+          if (!salaId) return;
+          fetch(
+            `/api/recursos_extras_disponiveis/${dataStr}/${contextoAulaSelecionada.horarioId}/${salaId}`,
+          )
+            .then((res) => res.json())
+            .then((recursos) => {
+              preencherOpcoesDeRecurso(recursos);
+            });
+        }
+      }
+
+      function abrirReservaNoHorario(turno, horarioId, horarioTexto) {
+        if (!recursoSelecionado) {
+          showToast("Selecione primeiro a sala ou laboratório.", "error");
+          return;
+        }
+        contextoAulaSelecionada = { turno, horarioId: String(horarioId), horarioTexto };
+        abrirModalComData(dataSelecionadaIso);
+      }
+
+      function escaparHtml(valor) {
+        return String(valor || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function atualizarContextoModal() {
+        const modalContext = document.getElementById("modalContext");
+        if (!modalContext) return;
+        const recurso = recursoSelecionado ? recursoSelecionado.nome : "Selecione um recurso";
+        const aula = contextoAulaSelecionada
+          ? contextoAulaSelecionada.horarioTexto
+          : "Escolha turno e horário";
+        modalContext.querySelector("span").textContent = `${recurso} · ${aula}`;
+      }
+
+      function obterRecursosSelecionados() {
+        const checklist = document.getElementById("modalRecursoChecklist");
+        if (checklist && checklist.style.display !== "none") {
+          return Array.from(checklist.querySelectorAll("input[type='checkbox']:checked"))
+            .map((input) => input.value)
+            .filter(Boolean);
+        }
+
+        return Array.from(document.getElementById("modalRecurso").selectedOptions)
+          .map((option) => option.value)
+          .filter(Boolean);
+      }
+
+      function obterProfessorSelecionado() {
+        const select = document.getElementById("modalProfessor");
+        return select ? select.value : "{{ current_user.id }}";
+      }
+
+      function professorObrigatorioSelecionado() {
+        return Boolean(obterProfessorSelecionado());
+      }
+
+      function configurarModoSelecaoDeRecursos() {
+        const select = document.getElementById("modalRecurso");
+        const label = document.getElementById("modalRecursoLabel");
+        const hint = document.getElementById("modalRecursoHint");
+        const checklist = document.getElementById("modalRecursoChecklist");
+        const multiplo = Boolean(contextoAulaSelecionada);
+
+        select.multiple = multiplo;
+        select.size = multiplo ? 6 : 1;
+        label.textContent = multiplo ? "1. Recursos para esta aula" : "1. Recurso ou sala";
+        if (hint) hint.style.display = multiplo ? "block" : "none";
+
+        if (checklist) checklist.style.display = multiplo ? "block" : "none";
+        // No desktop, evita Ctrl/Shift: usa checklist para seleção múltipla.
+        select.style.display = multiplo ? "none" : "";
+      }
+
+      function configurarHorarioFixoDaAula() {
+        if (!contextoAulaSelecionada) return;
+
+        const turnoSelect = document.getElementById("modalTurno");
+        const horarioSelect = document.getElementById("modalHorario");
+
+        turnoSelect.disabled = true;
+        turnoSelect.innerHTML = `<option value="${contextoAulaSelecionada.turno}" selected>${contextoAulaSelecionada.turno}</option>`;
+
+        horarioSelect.disabled = true;
+        horarioSelect.innerHTML = `<option value="${contextoAulaSelecionada.horarioId}" selected>${contextoAulaSelecionada.horarioTexto || "Horário selecionado"}</option>`;
+      }
+
+      function carregarTurmasParaRecursosSelecionados() {
+        const recursoIds = obterRecursosSelecionados();
+        const turmaSelect = document.getElementById("modalTurma");
+        const data = document.getElementById("modalData").value;
+        const horarioId = document.getElementById("modalHorario").value;
+        const professorId = obterProfessorSelecionado();
+
+        turmaSelect.disabled = true;
+        turmaSelect.innerHTML =
+          '<option value="" selected disabled>Carregando turmas...</option>';
+
+        if (!professorId) {
+          turmaSelect.innerHTML =
+            '<option value="" selected disabled>Selecione o professor responsável.</option>';
+          return;
+        }
+
+        if (!recursoIds.length || !horarioId) {
+          turmaSelect.innerHTML =
+            '<option value="" selected disabled>Selecione ao menos um recurso.</option>';
+          return;
+        }
+
+        fetch("/api/turmas_validas_multiplos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recurso_ids: recursoIds,
+            data,
+            horario_id: horarioId,
+            professor_id: professorId,
+          }),
+        })
+          .then((res) => res.json())
+          .then((turmas) => {
+            turmaSelect.disabled = false;
+            turmaSelect.innerHTML =
+              '<option value="" selected disabled>Escolha a turma...</option>';
+
+            if (turmas.length > 0) {
+              turmas.forEach((t) => {
+                turmaSelect.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
+              });
+            } else {
+              turmaSelect.innerHTML =
+                '<option value="" disabled>Nenhuma turma elegível para os recursos selecionados.</option>';
+            }
+          });
+      }
+
+      function preencherOpcoesDeRecurso(recursos = recursosPadraoModal) {
+        const select = document.getElementById("modalRecurso");
+        const multiplo = Boolean(contextoAulaSelecionada);
+        const checklist = document.getElementById("modalRecursoChecklist");
+        select.innerHTML = multiplo
+          ? ""
+          : '<option value="" selected disabled>Selecione um recurso...</option>';
+
+        recursos.forEach((recurso) => {
+          select.innerHTML += `<option value="${recurso.id}">${recurso.nome}</option>`;
+        });
+
+        const recursoPreselecionado =
+          recursoSelecionado &&
+          recursos.some((recurso) => String(recurso.id) === String(recursoSelecionado.id))
+            ? String(recursoSelecionado.id)
+            : "";
+
+        if (multiplo) {
+          Array.from(select.options).forEach((option) => {
+            option.selected = recursoPreselecionado && option.value === recursoPreselecionado;
+          });
+        } else {
+          select.value = recursoPreselecionado;
+        }
+
+        if (checklist) {
+          checklist.innerHTML = "";
+          if (multiplo) {
+            const salaId = recursoSelecionado ? String(recursoSelecionado.id) : "";
+
+            recursos.forEach((recurso) => {
+              const id = String(recurso.id);
+              const checked = Boolean(salaId && id === salaId);
+              const disabled = Boolean(salaId && id === salaId);
+              const row = document.createElement("label");
+              row.className = "resource-check";
+              row.innerHTML = `
+                <input type="checkbox" value="${id}" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""} />
+                <span>${recurso.nome}</span>
+              `;
+              checklist.appendChild(row);
+            });
+
+            if (salaId) {
+              Array.from(select.options).forEach((option) => {
+                option.selected = option.value === salaId;
+              });
+            }
+          }
+        }
+
+        if (recursoPreselecionado) {
+          select.dispatchEvent(new Event("change"));
+        }
+      }
+
+      document
+        .getElementById("modalRecurso")
+        .addEventListener("change", function () {
+          resetarCamposAbaixo("recurso");
+          const data = document.getElementById("modalData").value;
+          const turnoSelect = document.getElementById("modalTurno");
+          let recursoIds = obterRecursosSelecionados();
+
+          if (contextoAulaSelecionada && recursoSelecionado) {
+            const salaId = String(recursoSelecionado.id);
+            const selecionados = new Set(recursoIds.map(String));
+            const adicionados = [...selecionados].filter((id) => !selecaoRecursosAnterior.has(id));
+
+            const extras = [...selecionados].filter((id) => id !== salaId);
+            if (extras.length > 2) {
+              // Remove as seleções recém-adicionadas até caber no limite.
+              for (const id of adicionados) {
+                if (id === salaId) continue;
+                const opt = Array.from(this.options).find((o) => o.value === id);
+                if (opt) opt.selected = false;
+              }
+              recursoIds = obterRecursosSelecionados();
+              showToast("Selecione no máximo 2 recursos extras.", "error");
+            }
+
+            // Sempre mantém a sala/lab como base.
+            const salaOption = Array.from(this.options).find((opt) => opt.value === salaId);
+            if (salaOption) salaOption.selected = true;
+            recursoIds = obterRecursosSelecionados();
+          }
+
+          selecaoRecursosAnterior = new Set(recursoIds.map(String));
+
+          if (contextoAulaSelecionada) {
+            configurarHorarioFixoDaAula();
+            // Mantém a sala/lab selecionada como "base" da alocação da aula.
+            if (recursoSelecionado) {
+              const salaId = String(recursoSelecionado.id);
+              const salaOption = Array.from(this.options).find((opt) => opt.value === salaId);
+              if (salaOption) salaOption.selected = true;
+            }
+            if (recursoIds.length) {
+              carregarTurmasParaRecursosSelecionados();
+            }
+            return;
+          }
+
+          const salaId = this.value;
+
+          turnoSelect.innerHTML = '<option value="">Carregando turnos...</option>';
+          fetch(`/api/horarios/${salaId}/${data}`)
+            .then((res) => res.json())
+            .then((horarios) => {
+              let horariosFiltrados = horarios;
+              if (contextoAulaSelecionada) {
+                horariosFiltrados = horarios.filter(
+                  (item) =>
+                    item.id === Number(contextoAulaSelecionada.horarioId) &&
+                    item.turno === contextoAulaSelecionada.turno &&
+                    !item.ocupado_por,
+                );
+              }
+
+              horariosDaSala = horariosFiltrados;
+              turnoSelect.disabled = false;
+              const turnosDisponiveis = [...new Set(horariosFiltrados.map((item) => item.turno))];
+
+              turnoSelect.innerHTML =
+                '<option value="" selected disabled>Escolha o turno...</option>';
+
+              turnosDisponiveis.forEach((turno) => {
+                turnoSelect.innerHTML += `<option value="${turno}">${turno}</option>`;
+              });
+
+              if (contextoAulaSelecionada && turnosDisponiveis.includes(contextoAulaSelecionada.turno)) {
+                turnoSelect.value = contextoAulaSelecionada.turno;
+                turnoSelect.dispatchEvent(new Event("change"));
+              }
+
+            });
+        });
+
+      document
+        .getElementById("modalRecursoChecklist")
+        .addEventListener("change", function () {
+          // Reaproveita o mesmo fluxo de validação do select.
+          document.getElementById("modalRecurso").dispatchEvent(new Event("change"));
+        });
+
+      document
+        .getElementById("modalTurno")
+        .addEventListener("change", function () {
+          resetarCamposAbaixo("turno");
+          const turnoEscolhido = this.value;
+          const horarioSelect = document.getElementById("modalHorario");
+
+          horarioSelect.disabled = false;
+          horarioSelect.innerHTML =
+            '<option value="" selected disabled>Escolha um horário livre...</option>';
+
+          let temLivre = false;
+          horariosDaSala.forEach((h) => {
+            if (h.turno === turnoEscolhido && !h.ocupado_por) {
+              horarioSelect.innerHTML += `<option value="${h.id}">${h.descricao || ""} (${h.inicio} às ${h.fim})</option>`;
+              temLivre = true;
+            }
+          });
+
+          if (!temLivre) {
+            horarioSelect.innerHTML =
+              '<option value="" disabled>Sem horários livres para este turno.</option>';
+          }
+
+          if (contextoAulaSelecionada && contextoAulaSelecionada.turno === turnoEscolhido) {
+            const option = Array.from(horarioSelect.options).find(
+              (item) => item.value === contextoAulaSelecionada.horarioId,
+            );
+            if (option) {
+              horarioSelect.value = contextoAulaSelecionada.horarioId;
+              horarioSelect.dispatchEvent(new Event("change"));
+            }
+          }
+
+        });
+
+      document
+        .getElementById("modalHorario")
+        .addEventListener("change", function () {
+          resetarCamposAbaixo("horario");
+          const recursoId = document.getElementById("modalRecurso").value;
+          const data = document.getElementById("modalData").value;
+          const horarioId = this.value;
+          const professorId = obterProfessorSelecionado();
+          const turmaSelect = document.getElementById("modalTurma");
+
+          turmaSelect.disabled = false;
+          turmaSelect.innerHTML =
+            '<option value="">Analisando turmas válidas...</option>';
+
+          if (!professorId) {
+            turmaSelect.innerHTML =
+              '<option value="" selected disabled>Selecione o professor responsável.</option>';
+            return;
+          }
+
+          fetch(`/api/turmas_validas/${recursoId}/${data}/${horarioId}?professor_id=${encodeURIComponent(professorId)}`)
+            .then((res) => res.json())
+            .then((turmas) => {
+              turmaSelect.innerHTML =
+                '<option value="" selected disabled>Escolha a turma...</option>';
+              if (turmas.length > 0) {
+                turmas.forEach((t) => {
+                  turmaSelect.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
+                });
+              } else {
+                turmaSelect.innerHTML =
+                  '<option value="" disabled>Nenhuma turma elegível para este horário.</option>';
+              }
+              contextoAulaSelecionada = null;
+            });
+        });
+
+      document
+        .getElementById("modalTurma")
+        .addEventListener("change", function () {
+          document.getElementById("btnConfirmar").disabled = !professorObrigatorioSelecionado();
+        });
+
+      const modalProfessor = document.getElementById("modalProfessor");
+      if (modalProfessor) {
+        modalProfessor.addEventListener("change", function () {
+          resetarCamposAbaixo("horario");
+          if (contextoAulaSelecionada && obterRecursosSelecionados().length) {
+            carregarTurmasParaRecursosSelecionados();
+          } else if (document.getElementById("modalHorario").value) {
+            document.getElementById("modalHorario").dispatchEvent(new Event("change"));
+          }
+        });
+      }
+
+      function resetarCamposAbaixo(nivel) {
+        if (nivel === "recurso") {
+          if (contextoAulaSelecionada) {
+            configurarHorarioFixoDaAula();
+          } else {
+            document.getElementById("modalTurno").disabled = true;
+            document.getElementById("modalTurno").innerHTML =
+              '<option value="" selected disabled>Selecione o recurso primeiro...</option>';
+            document.getElementById("modalHorario").disabled = true;
+            document.getElementById("modalHorario").innerHTML =
+              '<option value="" selected disabled>Selecione o turno primeiro...</option>';
+          }
+          document.getElementById("modalTurma").disabled = true;
+          document.getElementById("modalTurma").innerHTML =
+            '<option value="" selected disabled>Selecione o horário primeiro...</option>';
+        }
+        if (nivel === "turno") {
+          document.getElementById("modalHorario").disabled = true;
+          document.getElementById("modalHorario").innerHTML =
+            '<option value="" selected disabled>Selecione o turno primeiro...</option>';
+          document.getElementById("modalTurma").disabled = true;
+          document.getElementById("modalTurma").innerHTML =
+            '<option value="" selected disabled>Selecione o horário primeiro...</option>';
+        }
+        if (nivel === "horario") {
+          document.getElementById("modalTurma").disabled = true;
+          document.getElementById("modalTurma").innerHTML =
+            '<option value="" selected disabled>Selecione o horário primeiro...</option>';
+        }
+        document.getElementById("btnConfirmar").disabled = true;
+      }
+
+      function confirmarReserva() {
+        const payload = {
+          recurso_id: document.getElementById("modalRecurso").value,
+          recurso_ids: obterRecursosSelecionados(),
+          turma_id: document.getElementById("modalTurma").value,
+          horario_id: document.getElementById("modalHorario").value,
+          data: document.getElementById("modalData").value,
+          professor_id: obterProfessorSelecionado(),
+        };
+
+        fetch("/api/reservar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+          .then((res) => res.json())
+          .then((resposta) => {
+            if (resposta.sucesso) {
+              showToast("Reserva confirmada com sucesso.");
+              bootstrap.Modal.getInstance(
+                document.getElementById("modalAgendamento"),
+              ).hide();
+              carregarAgendamentosDaData();
+              carregarFuturosAgendamentos();
+              atualizarGradeParaRecurso();
+            } else {
+              showToast(resposta.erro || "Erro ao reservar.", "error");
+            }
+          });
+      }
+
+      function cancelarReserva(id) {
+        if (!confirm("Deseja cancelar sua reserva?")) return;
+        fetch(`/api/reservar/${id}`, { method: "DELETE" }).then(() => {
+          showToast("Reserva cancelada.");
+          carregarAgendamentosDaData();
+          carregarFuturosAgendamentos();
+          atualizarGradeParaRecurso();
+        });
+      }
+
+      function cancelarReservaDoCard(event, button) {
+        event.stopPropagation();
+        cancelarReserva(button.dataset.reservaId);
+      }
+
+      function cancelarReservaGrupo(data, horarioId, turmaId, professorId = "") {
+        if (!confirm("Deseja cancelar esta reserva (todos os recursos desta aula)?")) return;
+        fetch("/api/reservar_grupo", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            data,
+            horario_id: horarioId,
+            turma_id: turmaId,
+            professor_id: professorId,
+          }),
+        })
+          .then((res) => res.json())
+          .then((resposta) => {
+            if (resposta.sucesso) {
+              showToast("Reserva cancelada.");
+              carregarAgendamentosDaData();
+              carregarFuturosAgendamentos();
+              atualizarGradeParaRecurso();
+            } else {
+              showToast(resposta.erro || "Erro ao cancelar.", "error");
+            }
+          });
+      }
+
+      function filtrarTurnos(turnoSelecionado) {
+        const colunas = document.querySelectorAll(".turno-column");
+        colunas.forEach((coluna) => {
+          const visivel =
+            turnoSelecionado === "todos" || coluna.dataset.turno === turnoSelecionado;
+          coluna.style.display = visivel ? "" : "none";
+        });
+      }
+
+      function showToast(msg, tipo = "success") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = `custom-toast ${tipo === "error" ? "error" : "success"}`;
+        toast.innerHTML = `<i class="bi ${tipo === "error" ? "bi-exclamation-octagon-fill" : "bi-check-circle-fill"}"></i><span>${msg}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add("show"), 10);
+        setTimeout(() => {
+          toast.classList.remove("show");
+          setTimeout(() => toast.remove(), 400);
+        }, 3500);
+      }
+    </script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register('{{ url_for("static", filename="sw.js") }}', {
+            scope: "/static/",
+            updateViaCache: "none",
+          })
+          .catch(() => null);
+      }
+    </script>
+  </body>
+</html>

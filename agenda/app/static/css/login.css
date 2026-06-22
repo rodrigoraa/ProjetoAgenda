@@ -1,0 +1,356 @@
+:root {
+  --login-navy: #12314a;
+  --login-blue: #0f6cbd;
+  --login-sky: #dff2ff;
+  --login-card: rgba(255, 255, 255, 0.92);
+  --login-line: rgba(15, 49, 74, 0.12);
+  --login-text: #153047;
+  --login-soft: #5d7285;
+  --login-shadow: 0 24px 50px rgba(13, 34, 53, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: "Manrope", sans-serif;
+  color: var(--login-text);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.35), transparent 30%),
+    linear-gradient(145deg, #0d2235 0%, #14466a 45%, #e9f6ff 45%, #f8fbff 100%);
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.login-hero,
+.login-panel {
+  padding: 40px 32px;
+}
+
+.login-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #f4fbff;
+}
+
+.hero-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.login-hero h1 {
+  margin: 18px 0 12px;
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  line-height: 1;
+  max-width: 10ch;
+}
+
+.login-hero p {
+  margin: 0;
+  max-width: 520px;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: rgba(244, 251, 255, 0.86);
+}
+
+.hero-points {
+  display: grid;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.hero-points div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.login-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.panel-brand,
+.login-form,
+.panel-copy,
+.panel-footer,
+.alert,
+.login-assistance {
+  width: min(100%, 460px);
+  margin-inline: auto;
+  max-width: 100%;
+}
+
+.panel-copy,
+.panel-footer,
+.login-assistance,
+.panel-brand {
+  min-width: 0;
+}
+
+.panel-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.brand-mark {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 34px rgba(15, 108, 189, 0.22);
+}
+
+.brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.panel-brand strong,
+.panel-brand span {
+  display: block;
+}
+
+.panel-brand strong {
+  font-size: 1.1rem;
+}
+
+.panel-brand span {
+  color: #486074;
+  font-size: 0.92rem;
+}
+
+.panel-copy h2 {
+  margin: 0 0 8px;
+  font-size: clamp(1.8rem, 4vw, 2rem);
+}
+
+.panel-copy p {
+  margin: 0 0 24px;
+  color: #486074;
+  line-height: 1.6;
+}
+
+.login-form {
+  padding: 28px;
+  border-radius: 28px;
+  background: var(--login-card);
+  border: 1px solid var(--login-line);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--login-shadow);
+}
+
+.form-label {
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.form-control {
+  min-height: 56px;
+  border-radius: 18px;
+  border: 1px solid rgba(21, 48, 71, 0.12);
+  background: #f8fbff;
+  padding: 16px 18px;
+}
+
+.form-control:focus {
+  border-color: rgba(15, 108, 189, 0.55);
+  box-shadow: 0 0 0 4px rgba(24, 160, 251, 0.12);
+}
+
+.btn-primary {
+  margin-top: 8px;
+  border: none;
+  border-radius: 18px;
+  padding: 16px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #0f6cbd, #1796e6);
+  box-shadow: 0 18px 32px rgba(15, 108, 189, 0.25);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: linear-gradient(135deg, #0e63ad, #1489d2);
+}
+
+.alert {
+  border: none;
+  border-radius: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 12px 28px rgba(13, 34, 53, 0.08);
+}
+
+.panel-footer {
+  margin-top: 18px;
+  color: #486074;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.login-assistance {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.login-assistance div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(21, 48, 71, 0.1);
+  color: #4f6374;
+}
+
+.login-assistance i {
+  color: var(--login-blue);
+}
+
+@media (max-width: 991px) {
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.28), transparent 32%),
+      linear-gradient(180deg, #0d2235 0 220px, #e9f6ff 220px 100%);
+  }
+
+  .login-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .login-hero {
+    padding-bottom: 12px;
+  }
+
+  .login-hero h1 {
+    max-width: 12ch;
+    font-size: clamp(2rem, 9vw, 3rem);
+  }
+
+  .login-panel {
+    padding-top: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-hero,
+  .login-panel {
+    padding: 24px 18px;
+  }
+
+  .login-shell,
+  .login-hero,
+  .login-panel {
+    max-width: 100vw;
+  }
+
+  .login-form {
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .hero-points div {
+    width: 100%;
+  }
+
+  .panel-brand {
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-hero h1 {
+    font-size: 1.95rem;
+  }
+
+  .brand-mark {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+:root {
+  --login-accent: #147c5f;
+  --login-warning: #b7791f;
+}
+
+.login-form,
+.alert,
+.login-assistance div,
+.brand-mark {
+  border-radius: 16px;
+}
+
+.form-control,
+.btn-primary {
+  border-radius: 12px;
+}
+
+.hero-badge {
+  border-radius: 999px;
+  color: #e8fff7;
+  border-color: rgba(20, 124, 95, 0.32);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #147c5f, #0f6cbd);
+}
+
+.login-assistance i {
+  color: var(--login-accent);
+}

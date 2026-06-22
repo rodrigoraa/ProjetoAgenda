@@ -1,0 +1,23 @@
+{
+  "name": "Agenda Escolar",
+  "short_name": "Agenda",
+  "description": "Sistema exclusivo para mobile de agendamento de salas e recursos escolares",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/image/logo_escola.png",
+      "sizes": "1080x1080",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/image/logo_escola.png",
+      "sizes": "1080x1080",
+      "type": "image/png"
+    }
+  ]
+}
